@@ -322,6 +322,7 @@ const FleetPro = {
             notas: vehicle.notas,
             user_id: this.user?.id,
             user_email: this.user?.email || null
+            ,deleted: vehicle.deleted || false
         }
     },
 
@@ -349,6 +350,7 @@ const FleetPro = {
             notas: maintenance.notas,
             user_id: this.user?.id,
             user_email: this.user?.email || null
+            ,deleted: maintenance.deleted || false
         }
     },
 
@@ -374,6 +376,7 @@ const FleetPro = {
             cobertura: insurance.cobertura,
             user_id: this.user?.id,
             user_email: this.user?.email || null
+            ,deleted: insurance.deleted || false
         }
     },
 
@@ -435,10 +438,15 @@ const FleetPro = {
             return
         }
 
+        const vehicleQuery = this.user.isManager ? supabase.from('vehicles').select('*') : supabase.from('vehicles').select('*').eq('user_id', this.user.id)
+        const maintenanceQuery = this.user.isManager ? supabase.from('maintenances').select('*') : supabase.from('maintenances').select('*').eq('user_id', this.user.id)
+        const insuranceQuery = this.user.isManager ? supabase.from('insurances').select('*') : supabase.from('insurances').select('*').eq('user_id', this.user.id)
+
+        // Always filter out soft-deleted rows
         const [vehicleResponse, maintenanceResponse, insuranceResponse] = await Promise.all([
-            this.user.isManager ? supabase.from('vehicles').select('*') : supabase.from('vehicles').select('*').eq('user_id', this.user.id),
-            this.user.isManager ? supabase.from('maintenances').select('*') : supabase.from('maintenances').select('*').eq('user_id', this.user.id),
-            this.user.isManager ? supabase.from('insurances').select('*') : supabase.from('insurances').select('*').eq('user_id', this.user.id)
+            vehicleQuery.eq('deleted', false),
+            maintenanceQuery.eq('deleted', false),
+            insuranceQuery.eq('deleted', false)
         ])
 
         if (vehicleResponse.error) {
@@ -968,14 +976,15 @@ const FleetPro = {
             alert('El sitio está bloqueado. No se puede eliminar vehículos.')
             return
         }
-        if (confirm('¿Está seguro de eliminar este vehículo? Se eliminarán también sus mantenimientos y seguros asociados.')) {
-            const { error: vehicleError } = await supabase.from('vehicles').delete().eq('id', id)
-            const { error: maintenanceError } = await supabase.from('maintenances').delete().eq('vehicle_id', id)
-            const { error: insuranceError } = await supabase.from('insurances').delete().eq('vehicle_id', id)
+        if (confirm('¿Está seguro de eliminar este vehículo? Se marcará como eliminado y no se mostrará.')) {
+            // Soft-delete: mark vehicle and related records as deleted
+            const { error: vehicleError } = await supabase.from('vehicles').update({ deleted: true }).eq('id', id)
+            const { error: maintenanceError } = await supabase.from('maintenances').update({ deleted: true }).eq('vehicle_id', id)
+            const { error: insuranceError } = await supabase.from('insurances').update({ deleted: true }).eq('vehicle_id', id)
 
             if (vehicleError || maintenanceError || insuranceError) {
-                console.error('Error eliminando datos relacionados:', vehicleError || maintenanceError || insuranceError)
-                this.showToast('Error eliminando vehículo', 'error')
+                console.error('Error marcando como eliminado:', vehicleError || maintenanceError || insuranceError)
+                this.showToast('Error al marcar vehículo como eliminado', 'error')
                 return
             }
 
@@ -984,7 +993,7 @@ const FleetPro = {
             this.data.insurances = this.data.insurances.filter(i => i.vehicleId !== id)
             this.renderAll()
             this.updateDashboard()
-            this.showToast('Vehículo eliminado', 'success')
+            this.showToast('Vehículo marcado como eliminado', 'success')
         }
     },
 
@@ -993,10 +1002,10 @@ const FleetPro = {
             alert('El sitio está bloqueado. No se puede eliminar mantenimientos.')
             return
         }
-        if (confirm('¿Eliminar este registro de mantenimiento?')) {
-            const { error } = await supabase.from('maintenances').delete().eq('id', id)
+        if (confirm('¿Eliminar este registro de mantenimiento? (se marcará como eliminado)')) {
+            const { error } = await supabase.from('maintenances').update({ deleted: true }).eq('id', id)
             if (error) {
-                console.error('Error eliminando mantenimiento:', error)
+                console.error('Error marcando mantenimiento como eliminado:', error)
                 this.showToast('Error eliminando mantenimiento', 'error')
                 return
             }
@@ -1004,7 +1013,7 @@ const FleetPro = {
             this.data.maintenances = this.data.maintenances.filter(m => m.id !== id)
             this.renderMaintenances()
             this.updateDashboard()
-            this.showToast('Mantenimiento eliminado', 'success')
+            this.showToast('Mantenimiento marcado como eliminado', 'success')
         }
     },
 
@@ -1013,10 +1022,10 @@ const FleetPro = {
             alert('El sitio está bloqueado. No se puede eliminar pólizas.')
             return
         }
-        if (confirm('¿Eliminar esta póliza de seguro?')) {
-            const { error } = await supabase.from('insurances').delete().eq('id', id)
+        if (confirm('¿Eliminar esta póliza de seguro? (se marcará como eliminada)')) {
+            const { error } = await supabase.from('insurances').update({ deleted: true }).eq('id', id)
             if (error) {
-                console.error('Error eliminando póliza:', error)
+                console.error('Error marcando póliza como eliminada:', error)
                 this.showToast('Error eliminando póliza', 'error')
                 return
             }
@@ -1024,7 +1033,7 @@ const FleetPro = {
             this.data.insurances = this.data.insurances.filter(i => i.id !== id)
             this.renderInsurances()
             this.updateDashboard()
-            this.showToast('Póliza eliminada', 'success')
+            this.showToast('Póliza marcada como eliminada', 'success')
         }
     },
 
