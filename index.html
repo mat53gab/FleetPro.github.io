@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FleetPro Gestión - Gestión y Mantenimiento de Flotas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="fleetpro-auth">
+        <h2>FleetPro</h2>
+        <p>Gestión profesional de flotas</p>
+
+        <div class="tabs">
+            <button id="loginTab" class="tab active">Iniciar Sesión</button>
+            <button id="registerTab" class="tab">Registrarse</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="loginForm">
+            <input type="text" id="loginEmail" placeholder="Correo electrónico o usuario">
+            <input type="password" id="loginPassword" placeholder="Contraseña">
+            <button id="loginBtn">Iniciar sesión</button>
+            <button type="button" id="showManagerPanelBtn" class="mt-2 text-xs text-slate-500 hover:text-slate-800 underline">Mostrar panel de gerente</button>
+            <button type="button" id="showAdminPanelBtn" class="mt-2 text-xs text-slate-500 hover:text-slate-800 underline">Mostrar panel de administrador</button>
+            <div id="managerPanel" class="hidden p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-sm mt-4">
+                <strong>Gerente</strong><br>
+                <div class="mt-4 space-y-3">
+                    <input type="text" id="managerUsername" placeholder="Usuario gerente" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <input type="password" id="managerPassword" placeholder="Contraseña gerente" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <button id="managerLoginBtn" class="w-full bg-amber-900 text-white rounded-lg px-4 py-2 hover:bg-amber-800">Entrar como gerente</button>
+                </div>
+            </div>
+            <div id="adminPanel" class="hidden p-4 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm mt-4">
+                <strong>Administrador</strong><br>
+                <div class="mt-4 space-y-3">
+                    <input type="text" id="adminUsername" placeholder="Usuario administrador" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <input type="password" id="adminPassword" placeholder="Contraseña administrador" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <button id="adminLoginBtn" class="w-full bg-slate-900 text-white rounded-lg px-4 py-2 hover:bg-slate-800">Entrar como administrador</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- REGISTER -->
+        <div id="registerForm" class="hidden">
+            <input type="email" id="registerEmail" placeholder="Correo electrónico">
+            <input type="password" id="registerPassword" placeholder="Contraseña">
+            <small>
+                Recomendamos usar una contraseña segura:
+                <br>
+                • mínimo 8 caracteres
+                <br>
+                • una letra mayúscula
+                <br>
+                • un número
+                <br>
+                • un símbolo especial
+                <br>
+                Puedes usar una contraseña simple si lo prefieres.
+            </small>
+            <button id="registerBtn">Crear cuenta</button>
+        </div>
+    </div>
+
+    <div id="app" class="flex h-screen overflow-hidden hidden">
+        <aside id="sidebar" class="w-64 bg-slate-900 text-white flex-shrink-0 hidden lg:flex lg:flex-col">
+            <div class="p-6 border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-truck-moving text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">FleetPro</h1>
+                        <p class="text-xs text-slate-400">Gestión de Flotas</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+                <a href="#" data-section="dashboard" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span>Inicio</span>
+                </a>
+                <a href="#" data-section="vehicles" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300">
+                    <i class="fas fa-car-side w-5"></i>
+                    <span>Vehículos</span>
+                </a>
+                <a href="#" data-section="maintenance" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300">
+                    <i class="fas fa-wrench w-5"></i>
+                    <span>Mantenimientos</span>
+                </a>
+                <a href="#" data-section="calendar" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300">
+                    <i class="fas fa-calendar-alt w-5"></i>
+                    <span>Calendario</span>
+                </a>
+                <a href="#" data-section="insurance" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300">
+                    <i class="fas fa-shield-alt w-5"></i>
+                    <span>Seguros</span>
+                </a>
+                <a href="#" data-section="reports" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300">
+                    <i class="fas fa-file-invoice-dollar w-5"></i>
+                    <span>Reportes</span>
+                </a>
+                <a href="#" id="managerNav" class="sidebar-link hidden flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300">
+                    <i class="fas fa-user-tie w-5"></i>
+                    <span>Gerente</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-slate-800">
+                <div class="text-xs text-slate-500">
+                    <p class="font-medium">Propiedad de GS Tecnología</p>
+                    <p>Derechos Reservados © 2026</p>
+                </div>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 card-shadow">
+                <div class="flex items-center gap-4">
+                    <button id="mobileMenuBtn" class="lg:hidden text-slate-600 hover:text-slate-900">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h2 id="pageTitle" class="text-xl font-semibold text-slate-800">Inicio</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="alertBtn" class="relative text-slate-600 hover:text-slate-900">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span id="alertCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+                    </button>
+                    <button id="logoutBtn" class="hidden text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg px-3 py-1 text-sm">Cerrar sesión</button>
+                    <div class="flex items-center gap-3">
+                        <div id="currentUserAvatar" class="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">AD</div>
+                        <div class="hidden md:block">
+                            <p id="currentUserName" class="text-sm font-medium text-slate-800">Administrador</p>
+                            <p id="currentUserRole" class="text-xs text-slate-500">Flota Principal</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6">
+                <div id="lockBanner" class="hidden mb-6 rounded-lg bg-red-100 border border-red-200 p-4 text-red-800">
+                    Sitio bloqueado por falta de pago. No se puede añadir ni modificar información hasta que el administrador reactive el acceso.
+                </div>
+                <section id="dashboard-section" class="section-content animate-fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                        <div id="adminControlPanel" class="hidden bg-white rounded-lg p-6 card-shadow lg:col-span-4">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-slate-800">Control de bloqueo</h3>
+                                    <p class="text-sm text-slate-500">El administrador puede bloquear o desbloquear la plataforma sin eliminar datos.</p>
+                                </div>
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <button id="blockBtn" class="bg-red-600 text-white rounded-lg px-4 py-2 hover:bg-red-700">Bloquear</button>
+                                    <button id="unblockBtn" class="bg-emerald-600 text-white rounded-lg px-4 py-2 hover:bg-emerald-700">Desbloquear</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg p-6 card-shadow">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-car text-blue-600 text-xl"></i>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-500 uppercase">Total</span>
+                            </div>
+                            <p class="text-3xl font-bold text-slate-900" id="totalVehicles">0</p>
+                            <p class="text-sm text-slate-600 mt-1">Vehículos Activos</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-6 card-shadow">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-500 uppercase">Vencidos</span>
+                            </div>
+                            <p class="text-3xl font-bold text-slate-900" id="overdueMaint">0</p>
+                            <p class="text-sm text-slate-600 mt-1">Mantenimientos</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-6 card-shadow">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-clock text-amber-600 text-xl"></i>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-500 uppercase">30 Días</span>
+                            </div>
+                            <p class="text-3xl font-bold text-slate-900" id="upcomingMaint">0</p>
+                            <p class="text-sm text-slate-600 mt-1">Próximos Mant.</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-6 card-shadow">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+                                </div>
+                                <span class="text-xs font-semibold text-slate-500 uppercase">Mes Actual</span>
+                            </div>
+                            <p class="text-3xl font-bold text-slate-900" id="monthlyExpenses">$0</p>
+                            <p class="text-sm text-slate-600 mt-1">Gastos Totales</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-lg p-6 card-shadow">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">Distribución por Tipo</h3>
+                            <canvas id="vehicleTypeChart"></canvas>
+                        </div>
+                        <div class="bg-white rounded-lg p-6 card-shadow">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">Gastos Mensuales 2024</h3>
+                            <canvas id="expensesChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-6 card-shadow">
+                        <h3 class="text-lg font-semibold text-slate-800 mb-4">Alertas Críticas</h3>
+                        <div id="alertsList" class="space-y-3">
+                            <p class="text-slate-500 text-center py-8">No hay alertas críticas en este momento</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="vehicles-section" class="section-content hidden animate-fade-in">
+                    <div class="bg-white rounded-lg card-shadow">
+                        <div class="p-6 border-b border-slate-200">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div>
+                                    <h3 class="text-xl font-semibold text-slate-800">Gestión de Vehículos</h3>
+                                    <p class="text-sm text-slate-600 mt-1">Administra tu flota completa</p>
+                                </div>
+                                <button id="addVehicleBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                                    <i class="fas fa-plus"></i>
+                                    Nuevo Vehículo
+                                </button>
+                            </div>
+                            <div class="mt-4 flex flex-col md:flex-row gap-3">
+                                <div class="flex-1 relative">
+                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input type="text" id="searchVehicle" placeholder="Buscar por placa, marca, modelo..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                                <select id="filterType" class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Todos los tipos</option>
+                                </select>
+                                <select id="filterStatus" class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Todos los estados</option>
+                                    <option value="activo">Activo</option>
+                                    <option value="vendido">Vendido</option>
+                                    <option value="dado de baja">Dado de Baja</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full table-hover">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Placa</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Tipo</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Marca/Modelo</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Año</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Kilometraje</th>
+                                        <th id="vehicleUserHeader" class="hidden px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Usuario</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Estado</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vehiclesTableBody" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+                        <div class="p-4 border-t border-slate-200 flex items-center justify-between">
+                            <p class="text-sm text-slate-600">Mostrando <span id="vehicleCount">0</span> vehículos</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="maintenance-section" class="section-content hidden animate-fade-in">
+                    <div class="bg-white rounded-lg card-shadow">
+                        <div class="p-6 border-b border-slate-200">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div>
+                                    <h3 class="text-xl font-semibold text-slate-800">Registro de Mantenimientos</h3>
+                                    <p class="text-sm text-slate-600 mt-1">Historial y programación de servicios</p>
+                                </div>
+                                <button id="addMaintenanceBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                                    <i class="fas fa-plus"></i>
+                                    Nuevo Mantenimiento
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full table-hover">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Fecha</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Vehículo</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Tipo</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Kilometraje</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Costo</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Próximo</th>
+                                        <th id="maintenanceUserHeader" class="hidden px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Usuario</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Proveedor</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="maintenanceTableBody" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="calendar-section" class="section-content hidden animate-fade-in">
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-semibold text-slate-800">Calendario de Mantenimientos</h3>
+                            <div class="flex items-center gap-2">
+                                <button id="prevMonth" class="p-2 hover:bg-slate-100 rounded-lg"><i class="fas fa-chevron-left text-slate-600"></i></button>
+                                <span id="currentMonth" class="font-semibold text-slate-800 min-w-[150px] text-center"></span>
+                                <button id="nextMonth" class="p-2 hover:bg-slate-100 rounded-lg"><i class="fas fa-chevron-right text-slate-600"></i></button>
+                            </div>
+                        </div>
+                        <div id="calendarGrid" class="grid grid-cols-7 gap-2"></div>
+                    </div>
+                </section>
+
+                <section id="insurance-section" class="section-content hidden animate-fade-in">
+                    <div class="bg-white rounded-lg card-shadow">
+                        <div class="p-6 border-b border-slate-200">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div>
+                                    <h3 class="text-xl font-semibold text-slate-800">Gestión de Seguros</h3>
+                                    <p class="text-sm text-slate-600 mt-1">Pólizas y renovaciones</p>
+                                </div>
+                                <button id="addInsuranceBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                                    <i class="fas fa-plus"></i>
+                                    Nueva Póliza
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full table-hover">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Vehículo</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Aseguradora</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">No. Póliza</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Cobertura</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Vigencia</th>
+                                        <th id="insuranceUserHeader" class="hidden px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Usuario</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Valor</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Estado</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="insuranceTableBody" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="reports-section" class="section-content hidden animate-fade-in">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-lg card-shadow p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">Gastos por Tipo de Mantenimiento</h3>
+                            <canvas id="maintenanceTypeChart"></canvas>
+                        </div>
+                        <div class="bg-white rounded-lg card-shadow p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">Estado de la Flota</h3>
+                            <canvas id="fleetStatusChart"></canvas>
+                        </div>
+                        <div class="bg-white rounded-lg card-shadow p-6 lg:col-span-2">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-slate-800">Resumen Ejecutivo</h3>
+                                <button id="exportReportBtn" class="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2">
+                                    <i class="fas fa-download"></i>
+                                    Exportar CSV
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="p-4 bg-slate-50 rounded-lg">
+                                    <p class="text-sm text-slate-600">Costo Promedio por Vehículo</p>
+                                    <p class="text-2xl font-bold text-slate-900 mt-2" id="avgCostVehicle">$0</p>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-lg">
+                                    <p class="text-sm text-slate-600">Valor Comercial Total</p>
+                                    <p class="text-2xl font-bold text-slate-900 mt-2" id="totalValue">$0</p>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-lg">
+                                    <p class="text-sm text-slate-600">Tasa de Disponibilidad</p>
+                                    <p class="text-2xl font-bold text-slate-900 mt-2" id="availabilityRate">0%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section id="manager-section" class="section-content hidden animate-fade-in">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-white rounded-lg p-6 card-shadow">
+                            <p class="text-sm text-slate-500">Usuarios únicos</p>
+                            <p class="text-3xl font-bold text-slate-900" id="managerUsersCount">0</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-6 card-shadow">
+                            <p class="text-sm text-slate-500">Registros totales</p>
+                            <p class="text-3xl font-bold text-slate-900" id="managerTotalRecords">0</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-6 card-shadow">
+                            <p class="text-sm text-slate-500">Mantenimientos próximos / vencidos</p>
+                            <p class="text-3xl font-bold text-slate-900" id="managerMaintenanceAlert">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-6 card-shadow mb-6">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-slate-800">Filtrar por usuario</h3>
+                                <p class="text-sm text-slate-500">Selecciona un usuario para revisar su información.</p>
+                            </div>
+                            <select id="managerUserFilter" class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="">Todos los usuarios</option>
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto mt-6">
+                            <table class="w-full table-hover">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Tipo de registro</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Detalle</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Usuario</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Fecha / Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="managerTableBody" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div id="vehicleModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto card-shadow-lg">
+            <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-slate-800" id="vehicleModalTitle">Nuevo Vehículo</h3>
+                <button class="closeModal text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="vehicleForm" class="p-6">
+                <input type="hidden" id="vehicleId">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Placa *</label>
+                        <input type="text" id="placa" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="ABC-1234">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Tipo de Vehículo *</label>
+                        <select id="tipo" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Seleccionar...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Marca *</label>
+                        <input type="text" id="marca" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Toyota">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Modelo *</label>
+                        <input type="text" id="modelo" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Hilux">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Año *</label>
+                        <input type="number" id="ano" required min="1990" max="2030" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="2023">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">VIN/Chasis *</label>
+                        <input type="text" id="vin" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1HGBH41JXMN109186">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Motor</label>
+                        <input type="text" id="motor" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="2.8L Turbo Diesel">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Tipo Combustible *</label>
+                        <select id="combustible" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Seleccionar...</option>
+                            <option value="Gasolina">Gasolina</option>
+                            <option value="Diésel">Diésel</option>
+                            <option value="Eléctrico">Eléctrico</option>
+                            <option value="Híbrido">Híbrido</option>
+                            <option value="Gas">Gas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Capacidad/Tonelaje</label>
+                        <input type="text" id="capacidad" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1.5 Ton / 5 Pasajeros">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Kilometraje Actual *</label>
+                        <input type="number" id="kilometraje" required min="0" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="45000">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Valor Comercial *</label>
+                        <input type="number" id="valorComercial" required min="0" step="0.01" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="35000">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Estado *</label>
+                        <select id="estado" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="activo">Activo</option>
+                            <option value="vendido">Vendido</option>
+                            <option value="dado de baja">Dado de Baja</option>
+                        </select>
+                    </div>
+                    <div id="fechaBajaContainer" class="hidden">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Fecha de Baja</label>
+                        <input type="date" id="fechaBaja" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div id="motivoBajaContainer" class="hidden">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Motivo de Baja</label>
+                        <input type="text" id="motivoBaja" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Venta, siniestro, etc.">
+                    </div>
+                    <div class="lg:col-span-3">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Notas</label>
+                        <textarea id="notas" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Información adicional..."></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                    <button type="button" class="closeModal px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar Vehículo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="maintenanceModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto card-shadow-lg">
+            <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-slate-800" id="maintenanceModalTitle">Nuevo Mantenimiento</h3>
+                <button class="closeModal text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="maintenanceForm" class="p-6">
+                <input type="hidden" id="maintenanceId">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Vehículo *</label>
+                        <select id="maintVehiculo" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Seleccionar vehículo...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Tipo de Mantenimiento *</label>
+                        <select id="maintTipo" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Seleccionar...</option>
+                            <option value="Cambio de Aceite">Cambio de Aceite</option>
+                            <option value="Llantas">Llantas</option>
+                            <option value="Frenos">Frenos</option>
+                            <option value="Filtros">Filtros</option>
+                            <option value="Combustible">Combustible</option>
+                            <option value="Batería">Batería</option>
+                            <option value="Alineación">Alineación</option>
+                            <option value="Balanceo">Balanceo</option>
+                            <option value="Revisión General">Revisión General</option>
+                            <option value="Transmisión">Transmisión</option>
+                            <option value="Sistema Eléctrico">Sistema Eléctrico</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Fecha *</label><input type="date" id="maintFecha" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Kilometraje *</label><input type="number" id="maintKilometraje" required min="0" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="50000"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Costo *</label><input type="number" id="maintCosto" required min="0" step="0.01" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="150.00"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Proveedor/Taller *</label><input type="text" id="maintProveedor" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Taller Principal"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Próximo Mantenimiento (Fecha)</label><input type="date" id="maintProximaFecha" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Próximo Mantenimiento (Km)</label><input type="number" id="maintProximoKm" min="0" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="60000"></div>
+                    <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">Notas Importantes</label><textarea id="maintNotas" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Detalles del servicio realizado..."></textarea></div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                    <button type="button" class="closeModal px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar Mantenimiento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="insuranceModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto card-shadow-lg">
+            <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-slate-800" id="insuranceModalTitle">Nueva Póliza de Seguro</h3>
+                <button class="closeModal text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="insuranceForm" class="p-6">
+                <input type="hidden" id="insuranceId">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Vehículo *</label><select id="insVehiculo" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"><option value="">Seleccionar vehículo...</option></select></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Aseguradora *</label><input type="text" id="insAseguradora" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Seguros del Estado"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Número de Póliza *</label><input type="text" id="insPoliza" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="POL-123456"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Valor Asegurado *</label><input type="number" id="insValor" required min="0" step="0.01" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="35000"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Fecha Inicio Vigencia *</label><input type="date" id="insFechaInicio" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 mb-1">Fecha Renovación *</label><input type="date" id="insFechaFin" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></div>
+                    <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">Cobertura *</label><textarea id="insCobertura" required rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Todo riesgo, responsabilidad civil, etc."></textarea></div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+                    <button type="button" class="closeModal px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar Póliza</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <div id="modulo-descargas" class="download-module hidden">
+        <h3>Descargas</h3>
+        <button id="descargarBaseDatos">Descargar Base de Datos</button>
+        <button id="descargarReportesPDF">Descargar Reportes en PDF</button>
+    </div>
+
+    <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
