@@ -733,9 +733,15 @@ const FleetPro = {
                 this.showToast('Vehículo actualizado correctamente', 'success')
             }
         } else {
-            const { data: inserted, error } = await supabase.from('vehicles').insert(row).select().single()
+            // Avoid sending client-generated id on insert (server may use serial/uuid)
+            const insertRow = { ...row }
+            if (insertRow.hasOwnProperty('id')) delete insertRow.id
+            const { data: inserted, error } = await supabase.from('vehicles').insert(insertRow).select().single()
             if (error) {
                 console.error('Error creando vehículo en servidor:', error)
+                console.error('Attempted payload:', insertRow)
+                if (error.status) console.error('Status:', error.status)
+                if (error.details) console.error('Details:', error.details)
                 // Fallback local save
                 this.data.vehicles.push(vehicle)
                 this.saveLocalData()
