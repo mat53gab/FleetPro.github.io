@@ -390,6 +390,29 @@ const FleetPro = {
         }
     },
 
+    async trySupabaseWrite(table, row, id = null) {
+        const payload = { ...row }
+        if (payload.hasOwnProperty('id')) delete payload.id
+
+        const exec = async (entry) => {
+            if (id) {
+                return await supabase.from(table).update(entry).eq('id', id).select().single()
+            }
+            return await supabase.from(table).insert(entry).select().single()
+        }
+
+        let result = await exec(payload)
+        if (result.error && typeof result.error.message === 'string' && result.error.message.includes('user_email')) {
+            const fallback = { ...payload }
+            delete fallback.user_email
+            result = await exec(fallback)
+            if (!result.error) {
+                console.warn(`Retried ${table} write without user_email column and it succeeded.`)
+            }
+        }
+        return result
+    },
+
     async init() {
         this.setupEventListeners()
         await this.checkSession()
@@ -724,7 +747,7 @@ const FleetPro = {
         const existingVehicle = this.data.vehicles.find(v => v.id === vehicle.id)
         const row = this.toVehicleRow(vehicle)
         if (id) {
-            const { data: updated, error } = await supabase.from('vehicles').update(row).eq('id', vehicle.id).select().single()
+            const { data: updated, error } = await this.trySupabaseWrite('vehicles', row, vehicle.id)
             if (error) {
                 console.error('Error actualizando vehículo en servidor:', error)
                 // Fallback local update
@@ -741,7 +764,7 @@ const FleetPro = {
             // Avoid sending client-generated id on insert (server may use serial/uuid)
             const insertRow = { ...row }
             if (insertRow.hasOwnProperty('id')) delete insertRow.id
-            const { data: inserted, error } = await supabase.from('vehicles').insert(insertRow).select().single()
+            const { data: inserted, error } = await this.trySupabaseWrite('vehicles', insertRow)
             if (error) {
                 console.error('Error creando vehículo en servidor:', error)
                 console.error('Attempted payload:', insertRow)
@@ -833,7 +856,7 @@ const FleetPro = {
         if (!Number.isFinite(maintenance.costo)) maintenance.costo = 0
 
         if (id) {
-            const { data: updated, error } = await supabase.from('maintenances').update(row).eq('id', maintenance.id).select().single()
+            const { data: updated, error } = await this.trySupabaseWrite('maintenances', row, maintenance.id)
             if (error) {
                 console.error('Error actualizando mantenimiento en servidor:', error)
                 this.showToast('Mantenimiento actualizado localmente (no en servidor): ' + (error.message || ''), 'warning')
@@ -848,7 +871,7 @@ const FleetPro = {
         } else {
             const insertRow = { ...row }
             if (insertRow.hasOwnProperty('id')) delete insertRow.id
-            const { data: inserted, error } = await supabase.from('maintenances').insert(insertRow).select().single()
+            const { data: inserted, error } = await this.trySupabaseWrite('maintenances', insertRow)
             if (error) {
                 console.error('Error creando mantenimiento en servidor:', error)
                 console.error('Attempted payload:', insertRow)
@@ -928,7 +951,7 @@ const FleetPro = {
         if (!insurance.fechaInicio || !insurance.fechaFin) { this.showToast('Fechas de vigencia requeridas', 'error'); return }
 
         if (id) {
-            const { data: updated, error } = await supabase.from('insurances').update(row).eq('id', insurance.id).select().single()
+            const { data: updated, error } = await this.trySupabaseWrite('insurances', row, insurance.id)
             if (error) {
                 console.error('Error actualizando póliza en servidor:', error)
                 this.showToast('Póliza actualizada localmente (no en servidor): ' + (error.message || ''), 'warning')
@@ -943,7 +966,7 @@ const FleetPro = {
         } else {
             const insertRow = { ...row }
             if (insertRow.hasOwnProperty('id')) delete insertRow.id
-            const { data: inserted, error } = await supabase.from('insurances').insert(insertRow).select().single()
+            const { data: inserted, error } = await this.trySupabaseWrite('insurances', insertRow)
             if (error) {
                 console.error('Error creando póliza en servidor:', error)
                 console.error('Attempted payload:', insertRow)
