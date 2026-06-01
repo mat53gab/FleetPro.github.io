@@ -9,7 +9,7 @@ create table if not exists public.profiles (
   role text not null default 'user'
 );
 
-alter table public.profiles enable row level security;
+-- IMPORTANTE: No habilitar RLS aún (evita recursión infinita)
 
 -- Función que crea un perfil por defecto cuando se crea un usuario
 create or replace function public.create_default_profile()
@@ -56,6 +56,9 @@ with check (
   and role = 'user'
 );
 
+-- Ahora habilitamos RLS en profiles
+alter table public.profiles enable row level security;
+
 -- ============================================
 -- 2) TABLA DE ESTADO GLOBAL (BLOQUEO)
 -- ============================================
@@ -64,7 +67,7 @@ create table if not exists public.app_state (
   value text not null
 );
 
-alter table public.app_state enable row level security;
+-- IMPORTANTE: No habilitar RLS aún (evita recursión infinita)
 
 drop policy if exists "App state: solo auth puede leer" on public.app_state;
 drop policy if exists "App state: solo admin puede insertar" on public.app_state;
@@ -119,6 +122,9 @@ using (
 insert into public.app_state (key, value)
 values ('lock', 'false')
 on conflict (key) do nothing;
+
+-- Ahora habilitamos RLS en app_state
+alter table public.app_state enable row level security;
 
 -- ============================================
 -- 3) TABLAS DE DATOS (VEHICLES, MAINTENANCES, INSURANCES)
