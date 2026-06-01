@@ -817,31 +817,47 @@ const FleetPro = {
             proximoKm: document.getElementById('maintProximoKm').value ? parseInt(document.getElementById('maintProximoKm').value) : null,
             notas: document.getElementById('maintNotas').value
         }
-
         const existingMaintenance = this.data.maintenances.find(m => m.id === maintenance.id)
         const row = this.toMaintenanceRow(maintenance)
         if (existingMaintenance?.userEmail) {
             row.user_email = existingMaintenance.userEmail
         }
+
+        // Basic validation
+        if (!maintenance.vehicleId || !Number.isFinite(maintenance.vehicleId)) { this.showToast('Selecciona un vehículo válido', 'error'); return }
+        if (!maintenance.tipo) { this.showToast('Selecciona un tipo de mantenimiento', 'error'); return }
+        if (!maintenance.fecha) { this.showToast('Fecha de mantenimiento requerida', 'error'); return }
+        if (!Number.isFinite(maintenance.kilometraje)) maintenance.kilometraje = 0
+        if (!Number.isFinite(maintenance.costo)) maintenance.costo = 0
+
         if (id) {
-            const { error } = await supabase.from('maintenances').update(row).eq('id', maintenance.id)
+            const { data: updated, error } = await supabase.from('maintenances').update(row).eq('id', maintenance.id).select().single()
             if (error) {
-                console.error('Error actualizando mantenimiento:', error)
-                this.showToast('Error actualizando mantenimiento', 'error')
-                return
+                console.error('Error actualizando mantenimiento en servidor:', error)
+                this.showToast('Mantenimiento actualizado localmente (no en servidor): ' + (error.message || ''), 'warning')
+                const index = this.data.maintenances.findIndex(m => m.id === maintenance.id)
+                if (index >= 0) this.data.maintenances[index] = { ...maintenance, userEmail: existingMaintenance?.userEmail || null }
+                this.saveLocalData()
+            } else {
+                const index = this.data.maintenances.findIndex(m => m.id === maintenance.id)
+                this.data.maintenances[index] = { ...maintenance, userEmail: existingMaintenance?.userEmail || null }
+                this.showToast('Mantenimiento actualizado', 'success')
             }
-            const index = this.data.maintenances.findIndex(m => m.id === maintenance.id)
-            this.data.maintenances[index] = { ...maintenance, userEmail: existingMaintenance?.userEmail || null }
-            this.showToast('Mantenimiento actualizado', 'success')
         } else {
-            const { error } = await supabase.from('maintenances').insert(row)
+            const insertRow = { ...row }
+            if (insertRow.hasOwnProperty('id')) delete insertRow.id
+            const { data: inserted, error } = await supabase.from('maintenances').insert(insertRow).select().single()
             if (error) {
-                console.error('Error creando mantenimiento:', error)
-                this.showToast('Error al registrar mantenimiento', 'error')
-                return
+                console.error('Error creando mantenimiento en servidor:', error)
+                console.error('Attempted payload:', insertRow)
+                this.data.maintenances.push(maintenance)
+                this.saveLocalData()
+                this.showToast('Mantenimiento guardado localmente (no en servidor): ' + (error.message || ''), 'warning')
+            } else {
+                if (inserted) this.data.maintenances.push(this.normalizeMaintenance(inserted))
+                else this.data.maintenances.push(maintenance)
+                this.showToast('Mantenimiento registrado', 'success')
             }
-            this.data.maintenances.push(maintenance)
-            this.showToast('Mantenimiento registrado', 'success')
         }
 
         this.closeAllModals()
@@ -899,31 +915,47 @@ const FleetPro = {
             fechaFin: document.getElementById('insFechaFin').value,
             cobertura: document.getElementById('insCobertura').value
         }
-
         const existingInsurance = this.data.insurances.find(i => i.id === insurance.id)
         const row = this.toInsuranceRow(insurance)
         if (existingInsurance?.userEmail) {
             row.user_email = existingInsurance.userEmail
         }
+
+        // Basic validation
+        if (!insurance.vehicleId || !Number.isFinite(insurance.vehicleId)) { this.showToast('Selecciona un vehículo válido', 'error'); return }
+        if (!insurance.aseguradora) { this.showToast('La aseguradora es obligatoria', 'error'); return }
+        if (!insurance.poliza) { this.showToast('El número de póliza es obligatorio', 'error'); return }
+        if (!Number.isFinite(insurance.valor)) insurance.valor = 0
+        if (!insurance.fechaInicio || !insurance.fechaFin) { this.showToast('Fechas de vigencia requeridas', 'error'); return }
+
         if (id) {
-            const { error } = await supabase.from('insurances').update(row).eq('id', insurance.id)
+            const { data: updated, error } = await supabase.from('insurances').update(row).eq('id', insurance.id).select().single()
             if (error) {
-                console.error('Error actualizando póliza:', error)
-                this.showToast('Error actualizando póliza', 'error')
-                return
+                console.error('Error actualizando póliza en servidor:', error)
+                this.showToast('Póliza actualizada localmente (no en servidor): ' + (error.message || ''), 'warning')
+                const index = this.data.insurances.findIndex(i => i.id === insurance.id)
+                if (index >= 0) this.data.insurances[index] = { ...insurance, userEmail: existingInsurance?.userEmail || null }
+                this.saveLocalData()
+            } else {
+                const index = this.data.insurances.findIndex(i => i.id === insurance.id)
+                this.data.insurances[index] = { ...insurance, userEmail: existingInsurance?.userEmail || null }
+                this.showToast('Póliza actualizada', 'success')
             }
-            const index = this.data.insurances.findIndex(i => i.id === insurance.id)
-            this.data.insurances[index] = { ...insurance, userEmail: existingInsurance?.userEmail || null }
-            this.showToast('Póliza actualizada', 'success')
         } else {
-            const { error } = await supabase.from('insurances').insert(row)
+            const insertRow = { ...row }
+            if (insertRow.hasOwnProperty('id')) delete insertRow.id
+            const { data: inserted, error } = await supabase.from('insurances').insert(insertRow).select().single()
             if (error) {
-                console.error('Error creando póliza:', error)
-                this.showToast('Error al registrar póliza', 'error')
-                return
+                console.error('Error creando póliza en servidor:', error)
+                console.error('Attempted payload:', insertRow)
+                this.data.insurances.push(insurance)
+                this.saveLocalData()
+                this.showToast('Póliza guardada localmente (no en servidor): ' + (error.message || ''), 'warning')
+            } else {
+                if (inserted) this.data.insurances.push(this.normalizeInsurance(inserted))
+                else this.data.insurances.push(insurance)
+                this.showToast('Póliza registrada', 'success')
             }
-            this.data.insurances.push(insurance)
-            this.showToast('Póliza registrada', 'success')
         }
 
         this.closeAllModals()
