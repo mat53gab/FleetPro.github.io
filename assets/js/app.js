@@ -321,8 +321,7 @@ const FleetPro = {
             motivo_baja: vehicle.motivoBaja || null,
             notas: vehicle.notas,
             user_id: this.user?.id,
-            user_email: this.user?.email || null
-            ,deleted: vehicle.deleted || false
+            deleted: vehicle.deleted || false
         }
     },
 
@@ -349,8 +348,7 @@ const FleetPro = {
             proximo_km: maintenance.proximoKm || null,
             notas: maintenance.notas,
             user_id: this.user?.id,
-            user_email: this.user?.email || null
-            ,deleted: maintenance.deleted || false
+            deleted: maintenance.deleted || false
         }
     },
 
@@ -375,8 +373,7 @@ const FleetPro = {
             fecha_fin: insurance.fechaFin,
             cobertura: insurance.cobertura,
             user_id: this.user?.id,
-            user_email: this.user?.email || null
-            ,deleted: insurance.deleted || false
+            deleted: insurance.deleted || false
         }
     },
 
@@ -723,9 +720,6 @@ const FleetPro = {
 
         const existingVehicle = this.data.vehicles.find(v => v.id === vehicle.id)
         const row = this.toVehicleRow(vehicle)
-        if (existingVehicle?.userEmail) {
-            row.user_email = existingVehicle.userEmail
-        }
         if (id) {
             const { data: updated, error } = await supabase.from('vehicles').update(row).eq('id', vehicle.id).select().single()
             if (error) {
@@ -827,9 +821,6 @@ const FleetPro = {
         }
         const existingMaintenance = this.data.maintenances.find(m => m.id === maintenance.id)
         const row = this.toMaintenanceRow(maintenance)
-        if (existingMaintenance?.userEmail) {
-            row.user_email = existingMaintenance.userEmail
-        }
 
         // Basic validation
         if (!maintenance.vehicleId || !Number.isFinite(maintenance.vehicleId)) { this.showToast('Selecciona un vehículo válido', 'error'); return }
@@ -925,9 +916,6 @@ const FleetPro = {
         }
         const existingInsurance = this.data.insurances.find(i => i.id === insurance.id)
         const row = this.toInsuranceRow(insurance)
-        if (existingInsurance?.userEmail) {
-            row.user_email = existingInsurance.userEmail
-        }
 
         // Basic validation
         if (!insurance.vehicleId || !Number.isFinite(insurance.vehicleId)) { this.showToast('Selecciona un vehículo válido', 'error'); return }
