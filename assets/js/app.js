@@ -321,6 +321,7 @@ const FleetPro = {
             motivo_baja: vehicle.motivoBaja || null,
             notas: vehicle.notas,
             user_id: this.user?.id,
+            user_email: this.user?.email || null,
             deleted: vehicle.deleted || false
         }
     },
@@ -348,6 +349,7 @@ const FleetPro = {
             proximo_km: maintenance.proximoKm || null,
             notas: maintenance.notas,
             user_id: this.user?.id,
+            user_email: this.user?.email || null,
             deleted: maintenance.deleted || false
         }
     },
@@ -373,6 +375,7 @@ const FleetPro = {
             fecha_fin: insurance.fechaFin,
             cobertura: insurance.cobertura,
             user_id: this.user?.id,
+            user_email: this.user?.email || null,
             deleted: insurance.deleted || false
         }
     },
