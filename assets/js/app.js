@@ -390,6 +390,7 @@ const FleetPro = {
     async init() {
         this.setupEventListeners()
         await this.checkSession()
+        this.loadLocalData()
     },
 
     async checkSession() {
@@ -464,6 +465,57 @@ const FleetPro = {
 
     saveData() {
         // Persistencia directa a Supabase; no se usa localStorage.
+    },
+
+    loadLocalData() {
+        try {
+            const raw = localStorage.getItem('fleetpro-local-data')
+            if (!raw) return
+            const parsed = JSON.parse(raw)
+            // Merge but don't overwrite server-fetched data
+            if (Array.isArray(parsed.vehicles) && parsed.vehicles.length) {
+                this.data.vehicles = [...this.data.vehicles, ...parsed.vehicles.filter(v => !this.data.vehicles.find(x => x.id === v.id))]
+            }
+            if (Array.isArray(parsed.maintenances) && parsed.maintenances.length) {
+                this.data.maintenances = [...this.data.maintenances, ...parsed.maintenances.filter(m => !this.data.maintenances.find(x => x.id === m.id))]
+            }
+            if (Array.isArray(parsed.insurances) && parsed.insurances.length) {
+                this.data.insurances = [...this.data.insurances, ...parsed.insurances.filter(i => !this.data.insurances.find(x => x.id === i.id))]
+            }
+        } catch (err) {
+            console.warn('No se pudo cargar datos locales:', err)
+        }
+    },
+
+    saveLocalData() {
+        try {
+            const payload = {
+                vehicles: this.data.vehicles,
+                maintenances: this.data.maintenances,
+                insurances: this.data.insurances
+            }
+            localStorage.setItem('fleetpro-local-data', JSON.stringify(payload))
+        } catch (err) {
+            console.warn('No se pudo guardar datos locales:', err)
+        }
+    },
+
+    showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer')
+        if (!container) {
+            alert(message)
+            return
+        }
+        const toast = document.createElement('div')
+        const base = 'text-white px-4 py-2 rounded shadow'
+        const color = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : type === 'warning' ? 'bg-amber-500 text-black' : 'bg-slate-700'
+        toast.className = `${base} ${color}`
+        toast.textContent = message
+        container.appendChild(toast)
+        setTimeout(() => {
+            toast.classList.add('opacity-0')
+            setTimeout(() => toast.remove(), 300)
+        }, 3500)
     },
 
     addDemoData() {
@@ -635,7 +687,7 @@ const FleetPro = {
         const id = document.getElementById('vehicleId').value
         const vehicle = {
             id: id ? parseInt(id) : Date.now(),
-            placa: document.getElementById('placa').value.toUpperCase(),
+            placa: (document.getElementById('placa').value || '').toUpperCase(),
             tipo: document.getElementById('tipo').value,
             marca: document.getElementById('marca').value,
             modelo: document.getElementById('modelo').value,
@@ -652,30 +704,51 @@ const FleetPro = {
             notas: document.getElementById('notas').value
         }
 
+        // Basic validation
+        if (!vehicle.placa) { this.showToast('La placa es obligatoria', 'error'); return }
+        if (!vehicle.tipo) { this.showToast('El tipo de vehículo es obligatorio', 'error'); return }
+        if (!vehicle.marca) { this.showToast('La marca es obligatoria', 'error'); return }
+        if (!vehicle.modelo) { this.showToast('El modelo es obligatorio', 'error'); return }
+        if (!Number.isFinite(vehicle.ano) || vehicle.ano <= 1900) { this.showToast('Año inválido', 'error'); return }
+        if (!Number.isFinite(vehicle.kilometraje)) vehicle.kilometraje = 0
+        if (!Number.isFinite(vehicle.valorComercial)) vehicle.valorComercial = 0.0
+
         const existingVehicle = this.data.vehicles.find(v => v.id === vehicle.id)
         const row = this.toVehicleRow(vehicle)
         if (existingVehicle?.userEmail) {
             row.user_email = existingVehicle.userEmail
         }
         if (id) {
-            const { error } = await supabase.from('vehicles').update(row).eq('id', vehicle.id)
+            const { data: updated, error } = await supabase.from('vehicles').update(row).eq('id', vehicle.id).select().single()
             if (error) {
-                console.error('Error actualizando vehículo:', error)
-                this.showToast('Error actualizando vehículo', 'error')
-                return
+                console.error('Error actualizando vehículo en servidor:', error)
+                // Fallback local update
+                const index = this.data.vehicles.findIndex(v => v.id === vehicle.id)
+                if (index >= 0) this.data.vehicles[index] = { ...vehicle, userEmail: existingVehicle?.userEmail || null }
+                this.saveLocalData()
+                this.showToast('Vehículo actualizado localmente (no en servidor): ' + (error.message || ''), 'warning')
+            } else {
+                const index = this.data.vehicles.findIndex(v => v.id === vehicle.id)
+                this.data.vehicles[index] = { ...vehicle, userEmail: existingVehicle?.userEmail || null }
+                this.showToast('Vehículo actualizado correctamente', 'success')
             }
-            const index = this.data.vehicles.findIndex(v => v.id === vehicle.id)
-            this.data.vehicles[index] = { ...vehicle, userEmail: existingVehicle?.userEmail || null }
-            this.showToast('Vehículo actualizado correctamente', 'success')
         } else {
-            const { error } = await supabase.from('vehicles').insert(row)
+            const { data: inserted, error } = await supabase.from('vehicles').insert(row).select().single()
             if (error) {
-                console.error('Error creando vehículo:', error)
-                this.showToast('Error al agregar vehículo', 'error')
-                return
+                console.error('Error creando vehículo en servidor:', error)
+                // Fallback local save
+                this.data.vehicles.push(vehicle)
+                this.saveLocalData()
+                this.showToast('Vehículo guardado localmente (no en servidor): ' + (error.message || ''), 'warning')
+            } else {
+                // If server returned an id/row, prefer server values
+                if (inserted) {
+                    this.data.vehicles.push(this.normalizeVehicle(inserted))
+                } else {
+                    this.data.vehicles.push(vehicle)
+                }
+                this.showToast('Vehículo agregado correctamente', 'success')
             }
-            this.data.vehicles.push(vehicle)
-            this.showToast('Vehículo agregado correctamente', 'success')
         }
 
         this.closeAllModals()
