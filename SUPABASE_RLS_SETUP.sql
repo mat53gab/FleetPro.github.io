@@ -119,9 +119,14 @@ alter table public.app_state enable row level security;
 -- 3) TABLAS DE DATOS (VEHICLES, MAINTENANCES, INSURANCES)
 -- ============================================
 
--- Agregar columna user_email si no existe
+-- Asegurar que existan las columnas de vinculación con el usuario
+alter table public.vehicles add column if not exists user_id uuid references auth.users(id) default auth.uid();
 alter table public.vehicles add column if not exists user_email text;
+
+alter table public.maintenances add column if not exists user_id uuid references auth.users(id) default auth.uid();
 alter table public.maintenances add column if not exists user_email text;
+
+alter table public.insurances add column if not exists user_id uuid references auth.users(id) default auth.uid();
 alter table public.insurances add column if not exists user_email text;
 
 -- Habilitar RLS
