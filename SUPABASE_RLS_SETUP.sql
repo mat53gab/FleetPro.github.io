@@ -29,10 +29,24 @@ $$ language plpgsql security definer;
 -- Función que crea un perfil por defecto cuando se crea un usuario
 create or replace function public.create_default_profile()
 returns trigger as $$
+declare
+  base_username text;
+  final_username text;
+  counter int := 0;
 begin
+  base_username := split_part(new.email, '@', 1);
+  final_username := base_username;
+
+  -- Bucle para encontrar un username único si ya existe uno igual
+  while exists (select 1 from public.profiles where username = final_username) loop
+    counter := counter + 1;
+    final_username := base_username || counter;
+  end loop;
+
   insert into public.profiles (id, role, email, username)
-  values (new.id, 'user', new.email, split_part(new.email, '@', 1))
+  values (new.id, 'user', new.email, final_username)
   on conflict (id) do nothing;
+
   return new;
 end;
 $$ language plpgsql security definer;
