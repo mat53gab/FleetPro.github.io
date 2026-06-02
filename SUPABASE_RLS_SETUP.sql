@@ -10,6 +10,19 @@ create table if not exists public.profiles (
   email text
 );
 
+-- Función para verificar roles sin causar recursión (Security Definer)
+create or replace function public.has_role(target_roles text[])
+returns boolean as $$
+begin
+  return exists (
+    select 1
+    from public.profiles
+    where id = auth.uid()
+      and role = any(target_roles)
+  );
+end;
+$$ language plpgsql security definer;
+
 -- IMPORTANTE: No habilitar RLS aún (evita recursión infinita)
 
 -- Función que crea un perfil por defecto cuando se crea un usuario
@@ -42,12 +55,7 @@ using (auth.uid() = id);
 create policy "Profiles: admin puede ver todos los perfiles" on public.profiles
 for select
 using (
-  exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role = 'admin'
-  )
+  public.has_role(array['admin'])
 );
 
 create policy "Profiles: usuario puede crear su propio perfil" on public.profiles
@@ -82,42 +90,22 @@ using (auth.role() = 'authenticated');
 create policy "App state: solo admin puede insertar" on public.app_state
 for insert
 with check (
-  exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role = 'admin'
-  )
+  public.has_role(array['admin'])
 );
 
 create policy "App state: solo admin puede actualizar" on public.app_state
 for update
 using (
-  exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role = 'admin'
-  )
+  public.has_role(array['admin'])
 )
 with check (
-  exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role = 'admin'
-  )
+  public.has_role(array['admin'])
 );
 
 create policy "App state: solo admin puede borrar" on public.app_state
 for delete
 using (
-  exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role = 'admin'
-  )
+  public.has_role(array['admin'])
 );
 
 insert into public.app_state (key, value)
@@ -153,57 +141,32 @@ create policy "Select own or manager/admin" on public.vehicles
 for select
 using (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 );
 
 create policy "Insert own or manager/admin" on public.vehicles
 for insert
 with check (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 );
 
 create policy "Update own or manager/admin" on public.vehicles
 for update
 using (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 )
 with check (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 );
 
 create policy "Delete own or manager/admin" on public.vehicles
 for delete
 using (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 );
 
 -- ============================================
@@ -218,57 +181,32 @@ create policy "Select own or manager/admin" on public.maintenances
 for select
 using (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 );
 
 create policy "Insert own or manager/admin" on public.maintenances
 for insert
 with check (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 );
 
 create policy "Update own or manager/admin" on public.maintenances
 for update
 using (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 )
 with check (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 );
 
 create policy "Delete own or manager/admin" on public.maintenances
 for delete
 using (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 );
 
 -- ============================================
@@ -283,57 +221,32 @@ create policy "Select own or manager/admin" on public.insurances
 for select
 using (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 );
 
 create policy "Insert own or manager/admin" on public.insurances
 for insert
 with check (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 );
 
 create policy "Update own or manager/admin" on public.insurances
 for update
 using (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 )
 with check (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 );
 
 create policy "Delete own or manager/admin" on public.insurances
 for delete
 using (
   user_id = auth.uid()
-  or exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and p.role in ('manager','admin')
-  )
+  or public.has_role(array['manager', 'admin'])
 );
 
 -- ============================================
