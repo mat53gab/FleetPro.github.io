@@ -734,6 +734,11 @@ const FleetPro = {
             alert('El sitio está bloqueado. No se puede guardar mantenimientos.')
             return
         }
+        if (!this.user || (this.user.id && this.user.id.startsWith('local-'))) {
+            this.showToast('Debes iniciar sesión con una cuenta real para guardar en el servidor', 'error')
+            return
+        }
+
         const id = document.getElementById('maintenanceId').value
         const maintenance = {
             id: id ? parseInt(id) : Date.now(),
@@ -758,13 +763,13 @@ const FleetPro = {
         if (!Number.isFinite(maintenance.costo)) maintenance.costo = 0
 
         if (id) {
-            const { data: updated, error } = await supabase.from('maintenances').update(row).eq('id', maintenance.id).select().single()
+            const updateData = { ...row };
+            delete updateData.id;
+
+            const { data: updated, error } = await supabase.from('maintenances').update(updateData).eq('id', maintenance.id).select().single()
             if (error) {
                 console.error('Error actualizando mantenimiento en servidor:', error)
                 this.showToast('Mantenimiento actualizado localmente (no en servidor): ' + (error.message || ''), 'warning')
-                const index = this.data.maintenances.findIndex(m => m.id === maintenance.id)
-                if (index >= 0) this.data.maintenances[index] = { ...maintenance, userEmail: existingMaintenance?.userEmail || null }
-                this.saveLocalData()
             } else {
                 const index = this.data.maintenances.findIndex(m => m.id === maintenance.id)
                 this.data.maintenances[index] = { ...maintenance, userEmail: existingMaintenance?.userEmail || null }
@@ -773,12 +778,10 @@ const FleetPro = {
         } else {
             const insertRow = { ...row }
             if (insertRow.hasOwnProperty('id')) delete insertRow.id
+
             const { data: inserted, error } = await supabase.from('maintenances').insert(insertRow).select().single()
             if (error) {
                 console.error('Error creando mantenimiento en servidor:', error)
-                console.error('Attempted payload:', insertRow)
-                this.data.maintenances.push(maintenance)
-                this.saveLocalData()
                 this.showToast('Mantenimiento guardado localmente (no en servidor): ' + (error.message || ''), 'warning')
             } else {
                 if (inserted) this.data.maintenances.push(this.normalizeMaintenance(inserted))
@@ -831,6 +834,11 @@ const FleetPro = {
             alert('El sitio está bloqueado. No se puede guardar pólizas.')
             return
         }
+        if (!this.user || (this.user.id && this.user.id.startsWith('local-'))) {
+            this.showToast('Debes iniciar sesión con una cuenta real para guardar en el servidor', 'error')
+            return
+        }
+
         const id = document.getElementById('insuranceId').value
         const insurance = {
             id: id ? parseInt(id) : Date.now(),
@@ -853,13 +861,13 @@ const FleetPro = {
         if (!insurance.fechaInicio || !insurance.fechaFin) { this.showToast('Fechas de vigencia requeridas', 'error'); return }
 
         if (id) {
-            const { data: updated, error } = await supabase.from('insurances').update(row).eq('id', insurance.id).select().single()
+            const updateData = { ...row };
+            delete updateData.id;
+
+            const { data: updated, error } = await supabase.from('insurances').update(updateData).eq('id', insurance.id).select().single()
             if (error) {
                 console.error('Error actualizando póliza en servidor:', error)
                 this.showToast('Póliza actualizada localmente (no en servidor): ' + (error.message || ''), 'warning')
-                const index = this.data.insurances.findIndex(i => i.id === insurance.id)
-                if (index >= 0) this.data.insurances[index] = { ...insurance, userEmail: existingInsurance?.userEmail || null }
-                this.saveLocalData()
             } else {
                 const index = this.data.insurances.findIndex(i => i.id === insurance.id)
                 this.data.insurances[index] = { ...insurance, userEmail: existingInsurance?.userEmail || null }
@@ -868,12 +876,10 @@ const FleetPro = {
         } else {
             const insertRow = { ...row }
             if (insertRow.hasOwnProperty('id')) delete insertRow.id
+
             const { data: inserted, error } = await supabase.from('insurances').insert(insertRow).select().single()
             if (error) {
                 console.error('Error creando póliza en servidor:', error)
-                console.error('Attempted payload:', insertRow)
-                this.data.insurances.push(insurance)
-                this.saveLocalData()
                 this.showToast('Póliza guardada localmente (no en servidor): ' + (error.message || ''), 'warning')
             } else {
                 if (inserted) this.data.insurances.push(this.normalizeInsurance(inserted))
