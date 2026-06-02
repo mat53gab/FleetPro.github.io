@@ -53,21 +53,6 @@ async function register() {
 async function login() {
     let identifier = document.getElementById('loginEmail').value.trim()
     let password = document.getElementById('loginPassword').value
-    const adminUsername = document.getElementById('adminUsername')?.value.trim()
-    const adminPassword = document.getElementById('adminPassword')?.value
-    const managerUsername = document.getElementById('managerUsername')?.value.trim()
-    const managerPassword = document.getElementById('managerPassword')?.value
-
-    // allow using hidden manager/admin panels (username + password)
-    if (!identifier) {
-        if (managerUsername) {
-            identifier = managerUsername
-            password = managerPassword
-        } else if (adminUsername) {
-            identifier = adminUsername
-            password = adminPassword
-        }
-    }
 
     if (!identifier || !password) {
         alert('Ingresa tu correo o usuario y contraseña')
@@ -259,7 +244,7 @@ const FleetPro = {
             fecha_baja: vehicle.fechaBaja || null,
             motivo_baja: vehicle.motivoBaja || null,
             notas: vehicle.notas,
-            user_id: (this.user?.id?.startsWith('local-')) ? null : this.user?.id,
+            user_id: this.user?.id && !this.user.id.startsWith('local-') ? this.user.id : undefined,
             user_email: this.user?.email || null, // Guardamos el email solo para visualización del Gerente
             deleted: vehicle.deleted || false
         }
@@ -287,7 +272,7 @@ const FleetPro = {
             proxima_fecha: maintenance.proximaFecha || null,
             proximo_km: maintenance.proximoKm || null,
             notas: maintenance.notas,
-            user_id: this.user?.id,
+            user_id: this.user?.id && !this.user.id.startsWith('local-') ? this.user.id : undefined,
             user_email: this.user?.email || null,
             deleted: maintenance.deleted || false
         }
@@ -313,7 +298,7 @@ const FleetPro = {
             fecha_inicio: insurance.fechaInicio,
             fecha_fin: insurance.fechaFin,
             cobertura: insurance.cobertura,
-            user_id: this.user?.id,
+            user_id: this.user?.id && !this.user.id.startsWith('local-') ? this.user.id : undefined,
             user_email: this.user?.email || null,
             deleted: insurance.deleted || false
         }
@@ -631,6 +616,11 @@ const FleetPro = {
             alert('El sitio está bloqueado. No se puede guardar vehículos.')
             return
         }
+        if (!this.user || (this.user.id && this.user.id.startsWith('local-'))) {
+            this.showToast('Debes iniciar sesión con una cuenta real para guardar en el servidor', 'error')
+            return
+        }
+
         const id = document.getElementById('vehicleId').value
         const vehicle = {
             id: id ? parseInt(id) : Date.now(),
