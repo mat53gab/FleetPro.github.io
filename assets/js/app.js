@@ -652,14 +652,15 @@ const FleetPro = {
 
         const existingVehicle = this.data.vehicles.find(v => v.id === vehicle.id)
         const row = this.toVehicleRow(vehicle)
+        
         if (id) {
-            const { data: updated, error } = await supabase.from('vehicles').update(row).eq('id', vehicle.id).select().single()
+            // Al actualizar, quitamos el ID del cuerpo para evitar errores de restricción
+            const updateData = { ...row };
+            delete updateData.id;
+            
+            const { data: updated, error } = await supabase.from('vehicles').update(updateData).eq('id', vehicle.id).select().single()
             if (error) {
                 console.error('Error actualizando vehículo en servidor:', error)
-                // Fallback local update
-                const index = this.data.vehicles.findIndex(v => v.id === vehicle.id)
-                if (index >= 0) this.data.vehicles[index] = { ...vehicle, userEmail: existingVehicle?.userEmail || null }
-                this.saveLocalData()
                 this.showToast('Vehículo actualizado localmente (no en servidor): ' + (error.message || ''), 'warning')
             } else {
                 const index = this.data.vehicles.findIndex(v => v.id === vehicle.id)
@@ -670,15 +671,10 @@ const FleetPro = {
             // Avoid sending client-generated id on insert (server may use serial/uuid)
             const insertRow = { ...row }
             if (insertRow.hasOwnProperty('id')) delete insertRow.id
+            
             const { data: inserted, error } = await supabase.from('vehicles').insert(insertRow).select().single()
             if (error) {
                 console.error('Error creando vehículo en servidor:', error)
-                console.error('Attempted payload:', insertRow)
-                if (error.status) console.error('Status:', error.status)
-                if (error.details) console.error('Details:', error.details)
-                // Fallback local save
-                this.data.vehicles.push(vehicle)
-                this.saveLocalData()
                 this.showToast('Vehículo guardado localmente (no en servidor): ' + (error.message || ''), 'warning')
             } else {
                 // If server returned an id/row, prefer server values
