@@ -4,22 +4,16 @@ const supabaseUrl = 'https://yrxqsikkjjumuvvvjxgj.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlyeHFzaWtramp1bXV2dnZqeGdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MDI4MzYsImV4cCI6MjA5NTQ3ODgzNn0.vCtF-yJLOOI-QTq8j-l7BqgTiC9_oS2aYi4OFl6Y9pU'
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-const ADMIN_EMAIL = 'admin@fleetpro.local'
-const MANAGER_EMAIL = 'gerente@fleetpro.local'
-
 // Fallback local credentials (insecure - only use for quick tests)
 const ADMIN_USERNAME_FALLBACK = 'Mateo Sanchez'
 const ADMIN_PASSWORD_FALLBACK = '7DyYjmnfR38++&=!'
 const MANAGER_USERNAME_FALLBACK = 'Diana Gomez'
 const MANAGER_PASSWORD_FALLBACK = 'KmLt==t!13012'
 
-function getRoleFromUser(user) {
-    const metadataRole = user?.user_metadata?.role
-    if (metadataRole === 'admin') return 'admin'
-    if (metadataRole === 'manager') return 'manager'
-    if (user?.email === ADMIN_EMAIL) return 'admin'
-    if (user?.email === MANAGER_EMAIL) return 'manager'
-    return 'user'
+async function getRoleFromDB(userId) {
+    const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).single()
+    if (error || !data) return 'user'
+    return data.role
 }
 
 function showLogin() {
@@ -165,7 +159,7 @@ async function login() {
         return
     }
 
-    const role = getRoleFromUser(user)
+    const role = await getRoleFromDB(user.id)
     FleetPro.user = {
         ...user,
         role,
@@ -321,7 +315,7 @@ const FleetPro = {
             motivo_baja: vehicle.motivoBaja || null,
             notas: vehicle.notas,
             user_id: this.user?.id,
-            user_email: this.user?.email || null,
+            user_email: this.user?.email || null, // Guardamos el email solo para visualización del Gerente
             deleted: vehicle.deleted || false
         }
     },
@@ -332,7 +326,7 @@ const FleetPro = {
             valorComercial: row.valor_comercial,
             fechaBaja: row.fecha_baja,
             motivoBaja: row.motivo_baja,
-            userEmail: row.user_email || row.userEmail || null
+            userEmail: row.user_email || null // Mantenemos para visualización si existe, pero no es la clave
         }
     },
 
@@ -360,7 +354,7 @@ const FleetPro = {
             vehicleId: row.vehicle_id,
             proximaFecha: row.proxima_fecha,
             proximoKm: row.proximo_km,
-            userEmail: row.user_email || row.userEmail || null
+            userEmail: row.user_email || null
         }
     },
 
@@ -386,31 +380,8 @@ const FleetPro = {
             vehicleId: row.vehicle_id,
             fechaInicio: row.fecha_inicio,
             fechaFin: row.fecha_fin,
-            userEmail: row.user_email || row.userEmail || null
+            userEmail: row.user_email || null
         }
-    },
-
-    async trySupabaseWrite(table, row, id = null) {
-        const payload = { ...row }
-        if (payload.hasOwnProperty('id')) delete payload.id
-
-        const exec = async (entry) => {
-            if (id) {
-                return await supabase.from(table).update(entry).eq('id', id).select().single()
-            }
-            return await supabase.from(table).insert(entry).select().single()
-        }
-
-        let result = await exec(payload)
-        if (result.error && typeof result.error.message === 'string' && result.error.message.includes('user_email')) {
-            const fallback = { ...payload }
-            delete fallback.user_email
-            result = await exec(fallback)
-            if (!result.error) {
-                console.warn(`Retried ${table} write without user_email column and it succeeded.`)
-            }
-        }
-        return result
     },
 
     async init() {
@@ -429,7 +400,7 @@ const FleetPro = {
             return
         }
 
-        const role = getRoleFromUser(sessionUser)
+        const role = await getRoleFromDB(sessionUser.id)
         this.user = {
             ...sessionUser,
             role,
@@ -747,7 +718,7 @@ const FleetPro = {
         const existingVehicle = this.data.vehicles.find(v => v.id === vehicle.id)
         const row = this.toVehicleRow(vehicle)
         if (id) {
-            const { data: updated, error } = await this.trySupabaseWrite('vehicles', row, vehicle.id)
+            const { data: updated, error } = await supabase.from('vehicles').update(row).eq('id', vehicle.id).select().single()
             if (error) {
                 console.error('Error actualizando vehículo en servidor:', error)
                 // Fallback local update
@@ -764,7 +735,7 @@ const FleetPro = {
             // Avoid sending client-generated id on insert (server may use serial/uuid)
             const insertRow = { ...row }
             if (insertRow.hasOwnProperty('id')) delete insertRow.id
-            const { data: inserted, error } = await this.trySupabaseWrite('vehicles', insertRow)
+            const { data: inserted, error } = await supabase.from('vehicles').insert(insertRow).select().single()
             if (error) {
                 console.error('Error creando vehículo en servidor:', error)
                 console.error('Attempted payload:', insertRow)
@@ -856,7 +827,7 @@ const FleetPro = {
         if (!Number.isFinite(maintenance.costo)) maintenance.costo = 0
 
         if (id) {
-            const { data: updated, error } = await this.trySupabaseWrite('maintenances', row, maintenance.id)
+            const { data: updated, error } = await supabase.from('maintenances').update(row).eq('id', maintenance.id).select().single()
             if (error) {
                 console.error('Error actualizando mantenimiento en servidor:', error)
                 this.showToast('Mantenimiento actualizado localmente (no en servidor): ' + (error.message || ''), 'warning')
@@ -871,7 +842,7 @@ const FleetPro = {
         } else {
             const insertRow = { ...row }
             if (insertRow.hasOwnProperty('id')) delete insertRow.id
-            const { data: inserted, error } = await this.trySupabaseWrite('maintenances', insertRow)
+            const { data: inserted, error } = await supabase.from('maintenances').insert(insertRow).select().single()
             if (error) {
                 console.error('Error creando mantenimiento en servidor:', error)
                 console.error('Attempted payload:', insertRow)
@@ -951,7 +922,7 @@ const FleetPro = {
         if (!insurance.fechaInicio || !insurance.fechaFin) { this.showToast('Fechas de vigencia requeridas', 'error'); return }
 
         if (id) {
-            const { data: updated, error } = await this.trySupabaseWrite('insurances', row, insurance.id)
+            const { data: updated, error } = await supabase.from('insurances').update(row).eq('id', insurance.id).select().single()
             if (error) {
                 console.error('Error actualizando póliza en servidor:', error)
                 this.showToast('Póliza actualizada localmente (no en servidor): ' + (error.message || ''), 'warning')
@@ -966,7 +937,7 @@ const FleetPro = {
         } else {
             const insertRow = { ...row }
             if (insertRow.hasOwnProperty('id')) delete insertRow.id
-            const { data: inserted, error } = await this.trySupabaseWrite('insurances', insertRow)
+            const { data: inserted, error } = await supabase.from('insurances').insert(insertRow).select().single()
             if (error) {
                 console.error('Error creando póliza en servidor:', error)
                 console.error('Attempted payload:', insertRow)

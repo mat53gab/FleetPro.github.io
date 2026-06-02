@@ -6,7 +6,8 @@
 -- ============================================
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  role text not null default 'user'
+  role text not null default 'user',
+  email text
 );
 
 -- IMPORTANTE: No habilitar RLS aún (evita recursión infinita)
@@ -15,8 +16,8 @@ create table if not exists public.profiles (
 create or replace function public.create_default_profile()
 returns trigger as $$
 begin
-  insert into public.profiles (id, role)
-  values (new.id, 'user')
+  insert into public.profiles (id, role, email)
+  values (new.id, 'user', new.email)
   on conflict (id) do nothing;
   return new;
 end;
