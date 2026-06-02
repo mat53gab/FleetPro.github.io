@@ -5,11 +5,6 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Fallback local credentials (insecure - only use for quick tests)
-const ADMIN_USERNAME_FALLBACK = 'Mateo Sanchez'
-const ADMIN_PASSWORD_FALLBACK = '7DyYjmnfR38++&=!'
-const MANAGER_USERNAME_FALLBACK = 'Diana Gomez'
-const MANAGER_PASSWORD_FALLBACK = 'KmLt==t!13012'
-
 async function getRoleFromDB(userId) {
     const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).single()
     if (error || !data) return 'user'
@@ -76,56 +71,6 @@ async function login() {
 
     if (!identifier || !password) {
         alert('Ingresa tu correo o usuario y contraseña')
-        return
-    }
-
-    // Quick insecure fallback: if identifier matches the hardcoded manager/admin
-    // credentials provided earlier, skip Supabase auth and sign in locally.
-    if (identifier === MANAGER_USERNAME_FALLBACK && password === MANAGER_PASSWORD_FALLBACK) {
-        const user = { id: 'local-manager', email: null, user_metadata: { full_name: MANAGER_USERNAME_FALLBACK } }
-        const role = 'manager'
-        FleetPro.user = {
-            ...user,
-            role,
-            isManager: true,
-            isAdmin: false,
-            fullName: user.user_metadata?.full_name || MANAGER_USERNAME_FALLBACK
-        }
-        document.getElementById('app').classList.remove('hidden')
-        document.getElementById('logoutBtn').classList.remove('hidden')
-        document.querySelector('.fleetpro-auth').style.display = 'none'
-        document.getElementById('currentUserName').textContent = FleetPro.user.fullName
-        document.getElementById('currentUserRole').textContent = 'Gerente'
-        document.getElementById('currentUserAvatar').textContent = 'DG'
-        await FleetPro.loadBlockState()
-        await FleetPro.loadData()
-        FleetPro.populateSelects()
-        FleetPro.renderAll()
-        FleetPro.updateDashboard()
-        return
-    }
-
-    if (identifier === ADMIN_USERNAME_FALLBACK && password === ADMIN_PASSWORD_FALLBACK) {
-        const user = { id: 'local-admin', email: null, user_metadata: { full_name: ADMIN_USERNAME_FALLBACK } }
-        const role = 'admin'
-        FleetPro.user = {
-            ...user,
-            role,
-            isManager: false,
-            isAdmin: true,
-            fullName: user.user_metadata?.full_name || ADMIN_USERNAME_FALLBACK
-        }
-        document.getElementById('app').classList.remove('hidden')
-        document.getElementById('logoutBtn').classList.remove('hidden')
-        document.querySelector('.fleetpro-auth').style.display = 'none'
-        document.getElementById('currentUserName').textContent = FleetPro.user.fullName
-        document.getElementById('currentUserRole').textContent = 'Administrador'
-        document.getElementById('currentUserAvatar').textContent = 'MS'
-        await FleetPro.loadBlockState()
-        await FleetPro.loadData()
-        FleetPro.populateSelects()
-        FleetPro.renderAll()
-        FleetPro.updateDashboard()
         return
     }
 
@@ -314,7 +259,7 @@ const FleetPro = {
             fecha_baja: vehicle.fechaBaja || null,
             motivo_baja: vehicle.motivoBaja || null,
             notas: vehicle.notas,
-            user_id: this.user?.id,
+            user_id: (this.user?.id?.startsWith('local-')) ? null : this.user?.id,
             user_email: this.user?.email || null, // Guardamos el email solo para visualización del Gerente
             deleted: vehicle.deleted || false
         }
