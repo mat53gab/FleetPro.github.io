@@ -34,7 +34,10 @@ declare
   final_username text;
   counter int := 0;
 begin
-  base_username := split_part(new.email, '@', 1);
+  -- Aseguramos que tengamos un base_username, incluso si el email falla
+  base_username := coalesce(split_part(new.email, '@', 1), 'user');
+  if base_username = '' then base_username := 'user'; end if;
+  
   final_username := base_username;
 
   -- Bucle para encontrar un username único si ya existe uno igual
@@ -43,13 +46,16 @@ begin
     final_username := base_username || counter;
   end loop;
 
+  -- Insertamos usando un conflicto robusto
   insert into public.profiles (id, role, email, username)
   values (new.id, 'user', new.email, final_username)
-  on conflict (id) do nothing;
+  on conflict (id) do update 
+  set email = excluded.email,
+      username = coalesce(public.profiles.username, excluded.username);
 
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
 
 -- Trigger en auth.users
 drop trigger if exists create_default_profile_trigger on auth.users;
