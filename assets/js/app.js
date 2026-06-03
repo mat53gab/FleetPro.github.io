@@ -1183,8 +1183,11 @@ const FleetPro = {
     renderCalendar() {
         const grid = document.getElementById('calendarGrid')
         if (grid) {
-            // Aseguramos que el contenedor tenga las clases de Grid de Tailwind
-            grid.className = "grid grid-cols-7 gap-2"
+            // Forzamos el layout de 7 columnas por código para asegurar la cuadrícula
+            // Esto resuelve problemas si Tailwind no detecta las clases inyectadas
+            grid.style.display = 'grid';
+            grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
+            grid.className = "grid gap-2 w-full mb-4";
         }
         const monthDisplay = document.getElementById('currentMonth')
         const year = this.data.currentMonth.getFullYear()
@@ -1202,7 +1205,7 @@ const FleetPro = {
         })
 
         for (let i = 0; i < firstDay; i++) {
-            grid.innerHTML += '<div class="calendar-day bg-slate-50/50 border border-slate-100 rounded-lg min-h-[100px]"></div>'
+            grid.innerHTML += '<div class="calendar-day bg-slate-50 border border-slate-200 rounded-lg h-28 opacity-40"></div>'
         }
 
         for (let day = 1; day <= daysInMonth; day++) {
@@ -1217,7 +1220,7 @@ const FleetPro = {
             })
 
             const isToday = this.formatDate(new Date()) === dateStr
-            grid.innerHTML += `<div class="calendar-day border border-slate-200 rounded-lg p-2 min-h-[100px] transition-all hover:border-blue-300 ${isToday ? 'bg-blue-50 border-blue-400 shadow-sm' : 'bg-white'}">${dayContent}</div>`
+            grid.innerHTML += `<div class="calendar-day border border-slate-300 shadow-sm rounded-lg p-2 h-28 overflow-hidden transition-all hover:border-blue-400 hover:shadow-md ${isToday ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' : 'bg-white'}">${dayContent}</div>`
         }
     },
 
