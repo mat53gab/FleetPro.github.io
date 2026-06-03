@@ -16,7 +16,6 @@ function showLogin() {
     document.getElementById('registerForm').classList.add('hidden')
     document.getElementById('loginTab').classList.add('active')
     document.getElementById('registerTab').classList.remove('active')
-    document.getElementById('modulo-descargas').classList.add('hidden')
 }
 
 function showRegister() {
@@ -342,7 +341,6 @@ const FleetPro = {
         await this.loadBlockState()
         document.getElementById('app').classList.remove('hidden')
         document.getElementById('logoutBtn').classList.remove('hidden')
-        document.getElementById('modulo-descargas').classList.remove('hidden')
         document.querySelector('.fleetpro-auth').style.display = 'none'
         document.getElementById('currentUserName').textContent = this.user.fullName
         document.getElementById('currentUserRole').textContent = this.user.isAdmin ? 'Administrador' : this.user.isManager ? 'Gerente' : 'Usuario'
@@ -970,7 +968,6 @@ const FleetPro = {
         document.getElementById('app').classList.add('hidden')
         document.querySelector('.fleetpro-auth').style.display = 'block'
         document.getElementById('logoutBtn').classList.add('hidden')
-        document.getElementById('modulo-descargas').classList.add('hidden')
         showLogin()
     },
 
