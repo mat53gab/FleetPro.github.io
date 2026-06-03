@@ -1182,6 +1182,10 @@ const FleetPro = {
 
     renderCalendar() {
         const grid = document.getElementById('calendarGrid')
+        if (grid) {
+            // Aseguramos que el contenedor tenga las clases de Grid de Tailwind
+            grid.className = "grid grid-cols-7 gap-2"
+        }
         const monthDisplay = document.getElementById('currentMonth')
         const year = this.data.currentMonth.getFullYear()
         const month = this.data.currentMonth.getMonth()
@@ -1194,11 +1198,11 @@ const FleetPro = {
 
         grid.innerHTML = ''
         ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(day => {
-            grid.innerHTML += `<div class="text-center font-semibold text-slate-600 text-sm py-2">${day}</div>`
+            grid.innerHTML += `<div class="text-center font-bold text-slate-500 text-xs uppercase tracking-wider py-2">${day}</div>`
         })
 
         for (let i = 0; i < firstDay; i++) {
-            grid.innerHTML += '<div class="calendar-day bg-slate-50 rounded-lg"></div>'
+            grid.innerHTML += '<div class="calendar-day bg-slate-50/50 border border-slate-100 rounded-lg min-h-[100px]"></div>'
         }
 
         for (let day = 1; day <= daysInMonth; day++) {
@@ -1213,7 +1217,7 @@ const FleetPro = {
             })
 
             const isToday = this.formatDate(new Date()) === dateStr
-            grid.innerHTML += `<div class="calendar-day border border-slate-200 rounded-lg p-2 ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'}">${dayContent}</div>`
+            grid.innerHTML += `<div class="calendar-day border border-slate-200 rounded-lg p-2 min-h-[100px] transition-all hover:border-blue-300 ${isToday ? 'bg-blue-50 border-blue-400 shadow-sm' : 'bg-white'}">${dayContent}</div>`
         }
     },
 

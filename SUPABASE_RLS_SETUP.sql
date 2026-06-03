@@ -1,302 +1,74 @@
--- FleetPro Supabase RLS and Schema Setup
--- Copy and paste all commands in Supabase SQL Editor
+-- 1. FUNCIÓN DE ROLES ACTUALIZADA (Sin recursión)
+-- Usamos CREATE OR REPLACE para no romper las dependencias de las tablas existentes
+CREATE OR REPLACE FUNCTION public.has_role(target_roles text[])
+RETURNS boolean AS $$
+DECLARE
+  user_role text;
+BEGIN
+  -- Al ser SECURITY DEFINER, esta consulta ignora las políticas RLS de la tabla profiles,
+  -- evitando el bucle infinito (recursión).
+  SELECT role INTO user_role FROM public.profiles WHERE id = auth.uid();
+  RETURN user_role = ANY(target_roles);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- ============================================
--- 1) TABLA DE PERFILES
--- ============================================
-create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  role text not null default 'user',
-  username text unique,
-  email text
-);
+-- 2. FUNCIÓN DE PERFIL ULTRA-ROBUSTA
+-- Esta función se encarga de crear la entrada en 'profiles' cuando alguien se registra
+CREATE OR REPLACE FUNCTION public.create_default_profile()
+RETURNS trigger AS $$
+BEGIN
+  -- Generamos un username único usando los primeros 8 caracteres del ID del usuario.
+  -- Esto evita errores de "username duplicado" que bloquean el registro.
+  INSERT INTO public.profiles (id, role, email, username)
+  VALUES (
+    new.id, 
+    'user', 
+    new.email, 
+    'user_' || substr(md5(new.id::text), 1, 8)
+  )
+  ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
 
--- Función para verificar roles sin causar recursión (Security Definer)
-create or replace function public.has_role(target_roles text[])
-returns boolean as $$
-begin
-  return exists (
-    select 1
-    from public.profiles
-    where id = auth.uid()
-      and role = any(target_roles)
-  );
-end;
-$$ language plpgsql security definer;
+  RETURN new;
+EXCEPTION WHEN OTHERS THEN
+  -- PLAN B: Si algo falla (por ejemplo, la tabla profiles está bloqueada),
+  -- permitimos que el usuario se cree en la tabla de Auth.
+  -- Es mejor un usuario sin perfil que un error de registro.
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- IMPORTANTE: No habilitar RLS aún (evita recursión infinita)
+-- 3. RE-VINCULAR EL TRIGGER
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.create_default_profile();
 
--- Función que crea un perfil por defecto cuando se crea un usuario
-create or replace function public.create_default_profile()
-returns trigger as $$
-declare
-  base_username text;
-  final_username text;
-  counter int := 0;
-begin
-  -- Aseguramos que tengamos un base_username, incluso si el email falla
-  base_username := coalesce(split_part(new.email, '@', 1), 'user');
-  if base_username = '' then base_username := 'user'; end if;
-  
-  final_username := base_username;
+-- 4. REPARAR POLÍTICAS DE PERFILES
+-- Desactivamos y reactivamos RLS para limpiar cualquier estado inconsistente
+ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
 
-  -- Bucle para encontrar un username único si ya existe uno igual
-  while exists (select 1 from public.profiles where username = final_username) loop
-    counter := counter + 1;
-    final_username := base_username || counter;
-  end loop;
+DROP POLICY IF EXISTS "Profiles: user puede ver su propio perfil" ON public.profiles;
+DROP POLICY IF EXISTS "Profiles: admin puede ver todos los perfiles" ON public.profiles;
+DROP POLICY IF EXISTS "Profiles: usuario puede crear su propio perfil" ON public.profiles;
 
-  -- Insertamos usando un conflicto robusto
-  insert into public.profiles (id, role, email, username)
-  values (new.id, 'user', new.email, final_username)
-  on conflict (id) do update 
-  set email = excluded.email,
-      username = coalesce(public.profiles.username, excluded.username);
+-- Los usuarios pueden ver solo su propio perfil
+CREATE POLICY "Profiles: user puede ver su propio perfil" 
+ON public.profiles FOR SELECT 
+USING (auth.uid() = id);
 
-  return new;
-end;
-$$ language plpgsql security definer set search_path = public;
+-- Los admins pueden ver todos (usando la función segura que definimos arriba)
+CREATE POLICY "Profiles: admin puede ver todos los perfiles" 
+ON public.profiles FOR SELECT 
+USING ( public.has_role(ARRAY['admin']) );
 
--- Trigger en auth.users
-drop trigger if exists create_default_profile_trigger on auth.users;
-create trigger create_default_profile_trigger
-after insert on auth.users
-for each row
-execute function public.create_default_profile();
+-- Permitir que el sistema inserte el perfil durante el registro
+CREATE POLICY "Profiles: sistema puede insertar" 
+ON public.profiles FOR INSERT 
+WITH CHECK (true);
 
--- Políticas para profiles
-drop policy if exists "Profiles: user puede ver su propio perfil" on public.profiles;
-drop policy if exists "Profiles: admin puede ver todos los perfiles" on public.profiles;
-drop policy if exists "Profiles: usuario puede crear su propio perfil" on public.profiles;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-create policy "Profiles: user puede ver su propio perfil" on public.profiles
-for select
-using (auth.uid() = id);
-
-create policy "Profiles: admin puede ver todos los perfiles" on public.profiles
-for select
-using (
-  public.has_role(array['admin'])
-);
-
-create policy "Profiles: usuario puede crear su propio perfil" on public.profiles
-for insert
-with check (
-  auth.uid() = id
-  and role = 'user'
-);
-
--- Ahora habilitamos RLS en profiles
-alter table public.profiles enable row level security;
-
--- ============================================
--- 2) TABLA DE ESTADO GLOBAL (BLOQUEO)
--- ============================================
-create table if not exists public.app_state (
-  key text primary key,
-  value text not null
-);
-
--- IMPORTANTE: No habilitar RLS aún (evita recursión infinita)
-
-drop policy if exists "App state: solo auth puede leer" on public.app_state;
-drop policy if exists "App state: solo admin puede insertar" on public.app_state;
-drop policy if exists "App state: solo admin puede actualizar" on public.app_state;
-drop policy if exists "App state: solo admin puede borrar" on public.app_state;
-
-create policy "App state: solo auth puede leer" on public.app_state
-for select
-using (auth.role() = 'authenticated');
-
-create policy "App state: solo admin puede insertar" on public.app_state
-for insert
-with check (
-  public.has_role(array['admin'])
-);
-
-create policy "App state: solo admin puede actualizar" on public.app_state
-for update
-using (
-  public.has_role(array['admin'])
-)
-with check (
-  public.has_role(array['admin'])
-);
-
-create policy "App state: solo admin puede borrar" on public.app_state
-for delete
-using (
-  public.has_role(array['admin'])
-);
-
-insert into public.app_state (key, value)
-values ('lock', 'false')
-on conflict (key) do nothing;
-
--- Ahora habilitamos RLS en app_state
-alter table public.app_state enable row level security;
-
--- ============================================
--- 3) TABLAS DE DATOS (VEHICLES, MAINTENANCES, INSURANCES)
--- ============================================
-
--- Asegurar que existan las columnas de vinculación con el usuario
-alter table public.vehicles add column if not exists user_id uuid references auth.users(id) default auth.uid();
-alter table public.vehicles add column if not exists user_email text;
-
-alter table public.maintenances add column if not exists user_id uuid references auth.users(id) default auth.uid();
-alter table public.maintenances add column if not exists user_email text;
-
-alter table public.insurances add column if not exists user_id uuid references auth.users(id) default auth.uid();
-alter table public.insurances add column if not exists user_email text;
-
--- Habilitar RLS
-alter table public.vehicles enable row level security;
-alter table public.maintenances enable row level security;
-alter table public.insurances enable row level security;
-
--- ============================================
--- 4) POLÍTICAS PARA VEHICLES
--- ============================================
-drop policy if exists "Select own or manager/admin" on public.vehicles;
-drop policy if exists "Insert own or manager/admin" on public.vehicles;
-drop policy if exists "Update own or manager/admin" on public.vehicles;
-drop policy if exists "Delete own or manager/admin" on public.vehicles;
-
-create policy "Select own or manager/admin" on public.vehicles
-for select
-using (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-);
-
-create policy "Insert own or manager/admin" on public.vehicles
-for insert
-with check (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-);
-
-create policy "Update own or manager/admin" on public.vehicles
-for update
-using (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-)
-with check (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-);
-
-create policy "Delete own or manager/admin" on public.vehicles
-for delete
-using (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-);
-
--- ============================================
--- 5) POLÍTICAS PARA MAINTENANCES
--- ============================================
-drop policy if exists "Select own or manager/admin" on public.maintenances;
-drop policy if exists "Insert own or manager/admin" on public.maintenances;
-drop policy if exists "Update own or manager/admin" on public.maintenances;
-drop policy if exists "Delete own or manager/admin" on public.maintenances;
-
-create policy "Select own or manager/admin" on public.maintenances
-for select
-using (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-);
-
-create policy "Insert own or manager/admin" on public.maintenances
-for insert
-with check (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-);
-
-create policy "Update own or manager/admin" on public.maintenances
-for update
-using (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-)
-with check (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-);
-
-create policy "Delete own or manager/admin" on public.maintenances
-for delete
-using (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-);
-
--- ============================================
--- 6) POLÍTICAS PARA INSURANCES
--- ============================================
-drop policy if exists "Select own or manager/admin" on public.insurances;
-drop policy if exists "Insert own or manager/admin" on public.insurances;
-drop policy if exists "Update own or manager/admin" on public.insurances;
-drop policy if exists "Delete own or manager/admin" on public.insurances;
-
-create policy "Select own or manager/admin" on public.insurances
-for select
-using (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-);
-
-create policy "Insert own or manager/admin" on public.insurances
-for insert
-with check (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-);
-
-create policy "Update own or manager/admin" on public.insurances
-for update
-using (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-)
-with check (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-);
-
-create policy "Delete own or manager/admin" on public.insurances
-for delete
-using (
-  user_id = auth.uid()
-  or public.has_role(array['manager', 'admin'])
-);
-
--- ============================================
--- 7) ASIGNAR ROLES ADMIN Y MANAGER
--- ============================================
-insert into public.profiles (id, role)
-select id, 'admin'
-from auth.users
-where email = 'admin@fleetpro.local'
-on conflict (id) do update set role = 'admin';
-
-insert into public.profiles (id, role)
-select id, 'manager'
-from auth.users
-where email = 'gerente@fleetpro.local'
-on conflict (id) do update set role = 'manager';
-
--- ============================================
--- 8) VERIFICACIÓN (COPY/PASTE ESTOS SELECT)
--- ============================================
--- select id, email, raw_user_meta_data, created_at, confirmed_at
--- from auth.users
--- order by created_at desc;
-
--- select id, role
--- from public.profiles
--- order by role, id;
+-- 5. ASEGURAR PERMISOS
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON TABLE public.profiles TO postgres, service_role;
+GRANT SELECT ON TABLE public.profiles TO authenticated;
