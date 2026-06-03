@@ -1184,10 +1184,15 @@ const FleetPro = {
         const grid = document.getElementById('calendarGrid')
         if (!grid) return
 
-        // Forzamos el layout de 7 columnas por código para asegurar la cuadrícula
-        grid.style.display = 'grid';
-        grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
-        grid.className = "grid gap-2 w-full mb-4";
+        // Forzamos el layout y visibilidad del contenedor principal
+        grid.style.cssText = `
+            display: grid !important;
+            grid-template-columns: repeat(7, 1fr) !important;
+            gap: 10px !important;
+            width: 100% !important;
+            min-height: 500px !important;
+            margin-top: 20px !important;
+        `;
 
         const monthDisplay = document.getElementById('currentMonth')
         const year = this.data.currentMonth.getFullYear()
@@ -1199,36 +1204,43 @@ const FleetPro = {
         const firstDay = new Date(year, month, 1).getDay()
         const daysInMonth = new Date(year, month + 1, 0).getDate()
 
-        grid.innerHTML = ''
+        let htmlContent = ''
+
+        // Cabeceras de los días
         ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(day => {
-            grid.innerHTML += `<div class="text-center font-bold text-slate-500 text-xs uppercase py-2">${day}</div>`
+            htmlContent += `<div class="text-center font-bold text-slate-600 text-xs uppercase py-2">${day}</div>`
         })
 
+        // Días vacíos del mes anterior
         for (let i = 0; i < firstDay; i++) {
-            grid.innerHTML += '<div class="calendar-day bg-slate-50 rounded-lg opacity-40" style="border: 1px solid #e2e8f0; height: 110px;"></div>'
+            htmlContent += '<div class="calendar-day bg-slate-50/50 rounded-lg" style="border: 1px solid #e2e8f0; height: 120px; opacity: 0.3;"></div>'
         }
 
+        // Días del mes actual
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day)
             const dateStr = this.formatDate(date)
             const maintenances = this.data.maintenances.filter(m => m.proximaFecha === dateStr)
-            let dayContent = `<div class="font-semibold text-slate-700">${day}</div>`
-
+            
+            let maintenanceLabels = ''
             maintenances.forEach(m => {
                 const vehicle = this.data.vehicles.find(v => v.id === m.vehicleId)
-                dayContent += `<div class="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded mt-1 truncate" title="${vehicle?.placa} - ${m.tipo}">${vehicle?.placa}</div>`
+                maintenanceLabels += `<div class="text-[10px] bg-blue-600 text-white px-1 py-0.5 rounded mt-1 truncate" title="${vehicle?.placa} - ${m.tipo}">${vehicle?.placa || 'Mant.'}</div>`
             })
 
             const isToday = this.formatDate(new Date()) === dateStr
-            const borderStyle = isToday ? '2px solid #3b82f6' : '1px solid #cbd5e1'
+            const borderStyle = isToday ? '2px solid #2563eb' : '1px solid #94a3b8'
             const bgColor = isToday ? '#eff6ff' : '#ffffff'
             
-            grid.innerHTML += `
-                <div class="calendar-day shadow-sm rounded-lg p-2 transition-all hover:shadow-md" 
-                     style="border: ${borderStyle}; background-color: ${bgColor}; height: 110px; overflow-y: auto;">
-                    ${dayContent}
+            htmlContent += `
+                <div class="calendar-day shadow-sm rounded-lg p-2" 
+                     style="border: ${borderStyle}; background-color: ${bgColor}; height: 120px; overflow-y: auto; display: block !important;">
+                    <div class="font-bold ${isToday ? 'text-blue-700' : 'text-slate-700'}">${day}</div>
+                    ${maintenanceLabels}
                 </div>`
         }
+
+        grid.innerHTML = htmlContent
     },
 
     changeMonth(delta) {
