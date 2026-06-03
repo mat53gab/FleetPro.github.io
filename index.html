@@ -318,7 +318,7 @@
                                 <button id="nextMonth" class="p-2 hover:bg-slate-100 rounded-lg"><i class="fas fa-chevron-right text-slate-600"></i></button>
                             </div>
                         </div>
-                        <div id="calendarGrid" class="grid grid-cols-7 gap-2"></div>
+                        <div id="calendarGrid"></div>
                     </div>
                 </section>
 
@@ -359,6 +359,37 @@
 
                 <section id="reports-section" class="section-content hidden animate-fade-in">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-lg card-shadow p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">Gastos por Tipo de Mantenimiento</h3>
+                            <canvas id="maintenanceTypeChart"></canvas>
+                        </div>
+                        <div class="bg-white rounded-lg card-shadow p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">Estado de la Flota</h3>
+                            <canvas id="fleetStatusChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="downloads-section" class="section-content hidden animate-fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm card-shadow">
+                            <h3 class="text-lg font-bold text-slate-800 mb-2">Base de Datos (JSON)</h3>
+                            <p class="text-slate-600 mb-4">Descarga un respaldo completo de todos tus vehículos, mantenimientos y seguros.</p>
+                            <button id="descargarBaseDatos" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                                <i class="fas fa-database"></i>Descargar Respaldo
+                            </button>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm card-shadow">
+                            <h3 class="text-lg font-bold text-slate-800 mb-2">Reporte General (PDF)</h3>
+                            <p class="text-slate-600 mb-4">Genera un documento listo para imprimir con el estado actual de la flota.</p>
+                            <button id="descargarReportesPDF" class="w-full bg-slate-800 text-white py-2 rounded-lg hover:bg-slate-900 transition-colors flex items-center justify-center gap-2">
+                                <i class="fas fa-file-pdf"></i>Descargar PDF
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="manager-section" class="section-content hidden animate-fade-in">
                         <div class="bg-white rounded-lg card-shadow p-6">
                             <h3 class="text-lg font-semibold text-slate-800 mb-4">Gastos por Tipo de Mantenimiento</h3>
                             <canvas id="maintenanceTypeChart"></canvas>
