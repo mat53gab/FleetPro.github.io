@@ -1184,22 +1184,19 @@ const FleetPro = {
         const grid = document.getElementById('calendarGrid')
         if (!grid) return
         
-        console.log('Calendar Grid element found:', grid); // ¡IMPORTANTE! Revisa esto en la consola del navegador
-
-        // Forzamos el layout por propiedades individuales para máxima compatibilidad
-        // Usamos !important para anular cualquier estilo externo que pueda estar interfiriendo
-        grid.style.cssText = `
-            display: grid !important;
-            grid-template-columns: repeat(7, 1fr) !important;
-            gap: 8px !important;
-            width: 100% !important;
-            min-height: 450px !important;
-            margin-top: 20px !important;
-            margin-bottom: 20px !important;
-            padding: 10px !important;
-            background-color: #e0f2fe !important; /* Fondo azul muy claro para que se vea el contenedor */
-            border: 2px dashed #0ea5e9 !important; /* Borde punteado azul para que se vea el contenedor */
-        `;
+        // Limpiamos estilos previos y forzamos el grid
+        grid.style.display = 'grid';
+        grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
+        grid.style.gap = '10px';
+        grid.style.width = '100%';
+        grid.style.minHeight = '500px'; // Forzamos altura mínima para que no colapse
+        grid.style.marginTop = '20px';
+        grid.style.padding = '10px';
+        grid.style.backgroundColor = '#f8fafc'; // Gris muy claro de fondo
+        grid.style.border = '2px solid #cbd5e1'; // Borde sólido para ver el recuadro
+        grid.style.borderRadius = '8px';
+        grid.style.visibility = 'visible';
+        grid.style.opacity = '1';
 
         const monthDisplay = document.getElementById('currentMonth')
         const year = this.data.currentMonth.getFullYear()
@@ -1214,13 +1211,13 @@ const FleetPro = {
         let html = ''
 
         // Cabeceras de los días con fondo y borde
-        ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(dayName => {
-            html += `<div style="text-align:center; font-weight:bold; color:#475569; font-size:11px; padding:10px; background:#e2e8f0; border:1px solid #cbd5e1; text-transform:uppercase;">${dayName}</div>`
+        ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'].forEach(dayName => {
+            html += `<div style="text-align:center; font-weight:bold; color:#1e293b; font-size:12px; padding:12px; background:#e2e8f0; border:1px solid #94a3b8; text-transform:uppercase; display:block;">${dayName}</div>`
         })
 
         // Días vacíos del mes anterior
         for (let i = 0; i < firstDay; i++) {
-            html += '<div style="border:1px solid #e2e8f0; height:110px; background:#f8fafc; opacity:0.5; border-radius:4px;"></div>'
+            html += '<div style="border:1px solid #e2e8f0; height:120px; background:#f1f5f9; border-radius:4px; display:block;"></div>'
         }
 
         // Días del mes actual
@@ -1232,16 +1229,16 @@ const FleetPro = {
             let maintenanceLabels = ''
             maintenances.forEach(m => {
                 const vehicle = this.data.vehicles.find(v => v.id === m.vehicleId)
-                maintenanceLabels += `<div style="background:#3b82f6; color:white; font-size:10px; padding:2px 4px; border-radius:4px; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${vehicle ? vehicle.placa : ''} - ${m.tipo}">${vehicle ? vehicle.placa : 'Mant.'}</div>`
+                maintenanceLabels += `<div style="background:#2563eb; color:white; font-size:10px; padding:4px; border-radius:4px; margin-top:4px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${vehicle ? vehicle.placa : ''}">${vehicle ? vehicle.placa : 'Mantenimiento'}</div>`
             })
 
             const isToday = this.formatDate(new Date()) === dateStr
-            const border = isToday ? '2px solid #2563eb' : '1px solid #cbd5e1'
+            const border = isToday ? '3px solid #1d4ed8' : '1px solid #64748b'
             const bgColor = isToday ? '#eff6ff' : '#ffffff'
             
             html += `
-                <div style="border:${border}; background-color:${bgColor}; height:110px; padding:6px; border-radius:4px; overflow-y:auto; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                    <div style="font-weight:bold; color:${isToday ? '#1d4ed8' : '#334155'}; font-size:14px; margin-bottom:4px;">${day}</div>
+                <div style="border:${border}; background-color:${bgColor}; height:120px; padding:8px; border-radius:4px; overflow-y:auto; display:block !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="font-weight:bold; color:${isToday ? '#1d4ed8' : '#0f172a'}; font-size:15px; margin-bottom:6px;">${day}</div>
                     ${maintenanceLabels}
                 </div>`
         }
