@@ -553,7 +553,8 @@ const FleetPro = {
             maintenance: 'Mantenimientos',
             calendar: 'Calendario',
             insurance: 'Seguros',
-            reports: 'Reportes'
+            reports: 'Reportes',
+            downloads: 'Descargas'
         }
         document.getElementById('pageTitle').textContent = titles[section]
 

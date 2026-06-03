@@ -103,6 +103,10 @@
                     <i class="fas fa-file-invoice-dollar w-5"></i>
                     <span>Reportes</span>
                 </a>
+                <a href="#" data-section="downloads" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300">
+                    <i class="fas fa-download w-5"></i>
+                    <span>Descargas</span>
+                </a>
                 <a href="#" id="managerNav" class="sidebar-link hidden flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300">
                     <i class="fas fa-user-tie w-5"></i>
                     <span>Gerente</span>
@@ -388,6 +392,29 @@
                         </div>
                     </div>
                 </section>
+
+                <section id="downloads-section" class="section-content hidden animate-fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Tarjeta Base de Datos -->
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm card-shadow">
+                            <h3 class="text-lg font-bold text-slate-800 mb-2">Respaldo Maestro</h3>
+                            <p class="text-slate-600 mb-4">Descarga toda la información del sistema en formato JSON para copias de seguridad.</p>
+                            <button id="descargarBaseDatos" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                                <i class="fas fa-database"></i>Descargar Base de Datos
+                            </button>
+                        </div>
+
+                        <!-- Tarjeta PDF -->
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm card-shadow">
+                            <h3 class="text-lg font-bold text-slate-800 mb-2">Reportes Visuales</h3>
+                            <p class="text-slate-600 mb-4">Genera una versión lista para imprimir o guardar en PDF de tus tablas actuales.</p>
+                            <button id="descargarReportesPDF" class="w-full bg-slate-800 text-white py-2 rounded-lg hover:bg-slate-900 transition-colors flex items-center justify-center gap-2">
+                                <i class="fas fa-file-pdf"></i>Descargar Reportes en PDF
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
                 <section id="manager-section" class="section-content hidden animate-fade-in">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                         <div class="bg-white rounded-lg p-6 card-shadow">
@@ -598,12 +625,6 @@
     </div>
 
     <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
-
-    <div id="modulo-descargas" class="download-module hidden">
-        <h3>Descargas</h3>
-        <button id="descargarBaseDatos">Descargar Base de Datos</button>
-        <button id="descargarReportesPDF">Descargar Reportes en PDF</button>
-    </div>
 
     <script type="module" src="assets/js/app.js"></script>
 </body>
