@@ -1202,14 +1202,14 @@ const FleetPro = {
 
         let html = ''
 
-        // Cabeceras de los días con fondo y borde
+        // 1. Cabeceras (Dom, Lun...)
         ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'].forEach(dayName => {
-            html += `<div style="text-align:center; font-weight:bold; color:#334155; font-size:11px; padding:10px; background:#e2e8f0; border:1px solid #cbd5e1; text-transform:uppercase;">${dayName}</div>`
+            html += `<div style="text-align:center; font-weight:bold; color:#1e293b; font-size:12px; padding:12px; background:#f1f5f9; border:1px solid #94a3b8; text-transform:uppercase;">${dayName}</div>`
         })
 
-        // Días vacíos del mes anterior
+        // 2. Espacios en blanco mes anterior
         for (let i = 0; i < firstDay; i++) {
-            html += '<div style="border:1px solid #cbd5e1; height:100px; background:#f1f5f9;"></div>'
+            html += '<div style="border:1px solid #cbd5e1; height:120px; background:#fafafa; opacity:0.5;"></div>'
         }
 
         // Días del mes actual
@@ -1224,12 +1224,12 @@ const FleetPro = {
             })
 
             const isToday = this.formatDate(new Date()) === dateStr
-            const border = isToday ? '2px solid #2563eb' : '1px solid #94a3b8'
+            const borderStyle = isToday ? '2px solid #2563eb' : '1px solid #475569'
             const bgColor = isToday ? '#eff6ff' : '#ffffff'
             
             html += `
-                <div style="border:${border}; background-color:${bgColor}; height:100px; padding:6px; overflow-y:auto; display:block !important;">
-                    <div style="font-weight:bold; color:${isToday ? '#2563eb' : '#334155'}; font-size:13px;">${day}</div>
+                <div style="border:${borderStyle}; background-color:${bgColor}; height:120px; padding:8px; overflow-y:auto; display:block !important; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);">
+                    <div style="font-weight:bold; color:${isToday ? '#2563eb' : '#1e293b'}; font-size:14px; margin-bottom:4px;">${day}</div>
                     ${maintenanceLabels}
                 </div>`
         }
