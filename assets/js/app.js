@@ -558,7 +558,6 @@ const FleetPro = {
 
         if (section === 'calendar') this.renderCalendar()
         if (section === 'reports') this.updateCharts()
-        if (section === 'downloads') console.log('Navegando a descargas...')
         if (section === 'manager') this.renderManagerSection()
     },
 
@@ -1183,12 +1182,19 @@ const FleetPro = {
         const grid = document.getElementById('calendarGrid')
         if (!grid) return
         
-        // Configuración forzada del Grid para que se vean los cuadros
+        // Limpiamos estilos previos y forzamos el grid
         grid.style.display = 'grid';
         grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
-        grid.style.gap = '8px';
+        grid.style.gap = '10px';
         grid.style.width = '100%';
-        grid.style.marginTop = '10px';
+        grid.style.minHeight = '500px'; // Forzamos altura mínima para que no colapse
+        grid.style.marginTop = '20px';
+        grid.style.padding = '10px';
+        grid.style.backgroundColor = '#f8fafc'; // Gris muy claro de fondo
+        grid.style.border = '2px solid #cbd5e1'; // Borde sólido para ver el recuadro
+        grid.style.borderRadius = '8px';
+        grid.style.visibility = 'visible';
+        grid.style.opacity = '1';
 
         const monthDisplay = document.getElementById('currentMonth')
         const year = this.data.currentMonth.getFullYear()
@@ -1202,31 +1208,35 @@ const FleetPro = {
 
         let html = ''
 
-        // 1. Cabeceras (Dom, Lun...)
+        // Cabeceras de los días con fondo y borde
         ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'].forEach(dayName => {
-            html += `<div style="text-align:center; font-weight:bold; color:#64748b; font-size:12px; padding:8px; background:#f8fafc; border:1px solid #e2e8f0; text-transform:uppercase;">${dayName}</div>`
+            html += `<div style="text-align:center; font-weight:bold; color:#1e293b; font-size:12px; padding:12px; background:#e2e8f0; border:1px solid #94a3b8; text-transform:uppercase; display:block;">${dayName}</div>`
         })
 
-        // 2. Espacios en blanco mes anterior
+        // Días vacíos del mes anterior
         for (let i = 0; i < firstDay; i++) {
-            html += `<div style="border:1px solid #f1f5f9; height:100px; background:#fafafa;"></div>`
+            html += '<div style="border:1px solid #e2e8f0; height:120px; background:#f1f5f9; border-radius:4px; display:block;"></div>'
         }
 
-        // 3. Cuadritos de los días
+        // Días del mes actual
         for (let day = 1; day <= daysInMonth; day++) {
+            // Formatear fecha local manualmente para evitar desfases
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
             const maintenances = this.data.maintenances.filter(m => m.proximaFecha === dateStr)
             
             let maintenanceLabels = ''
             maintenances.forEach(m => {
                 const vehicle = this.data.vehicles.find(v => v.id === m.vehicleId)
-                maintenanceLabels += `<div style="background:#2563eb; color:white; font-size:9px; padding:2px 4px; border-radius:3px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${vehicle?.placa || 'Mant.'}</div>`
+                maintenanceLabels += `<div style="background:#2563eb; color:white; font-size:10px; padding:4px; border-radius:4px; margin-top:4px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${vehicle ? vehicle.placa : ''}">${vehicle ? vehicle.placa : 'Mantenimiento'}</div>`
             })
 
             const isToday = this.formatDate(new Date()) === dateStr
+            const border = isToday ? '3px solid #1d4ed8' : '1px solid #64748b'
+            const bgColor = isToday ? '#eff6ff' : '#ffffff'
+            
             html += `
-                <div style="border:1px solid #cbd5e1; background:${isToday ? '#eff6ff' : '#ffffff'}; min-height:100px; padding:6px; position:relative; overflow-y:auto;">
-                    <span style="font-weight:bold; font-size:13px; color:${isToday ? '#2563eb' : '#1e293b'}">${day}</span>
+                <div style="border:${border}; background-color:${bgColor}; height:120px; padding:8px; border-radius:4px; overflow-y:auto; display:block !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="font-weight:bold; color:${isToday ? '#1d4ed8' : '#0f172a'}; font-size:15px; margin-bottom:6px;">${day}</div>
                     ${maintenanceLabels}
                 </div>`
         }

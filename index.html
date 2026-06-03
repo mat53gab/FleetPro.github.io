@@ -358,19 +358,6 @@
                 </section>
 
                 <section id="reports-section" class="section-content hidden animate-fade-in">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div class="bg-white rounded-lg card-shadow p-6">
-                            <h3 class="text-lg font-semibold text-slate-800 mb-4">Gastos por Tipo de Mantenimiento</h3>
-                            <canvas id="maintenanceTypeChart"></canvas>
-                        </div>
-                        <div class="bg-white rounded-lg card-shadow p-6">
-                            <h3 class="text-lg font-semibold text-slate-800 mb-4">Estado de la Flota</h3>
-                            <canvas id="fleetStatusChart"></canvas>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="downloads-section" class="section-content hidden animate-fade-in">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm card-shadow">
                             <h3 class="text-lg font-bold text-slate-800 mb-2">Base de Datos (JSON)</h3>
@@ -385,41 +372,6 @@
                             <button id="descargarReportesPDF" class="w-full bg-slate-800 text-white py-2 rounded-lg hover:bg-slate-900 transition-colors flex items-center justify-center gap-2">
                                 <i class="fas fa-file-pdf"></i>Descargar PDF
                             </button>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="manager-section" class="section-content hidden animate-fade-in">
-                        <div class="bg-white rounded-lg card-shadow p-6">
-                            <h3 class="text-lg font-semibold text-slate-800 mb-4">Gastos por Tipo de Mantenimiento</h3>
-                            <canvas id="maintenanceTypeChart"></canvas>
-                        </div>
-                        <div class="bg-white rounded-lg card-shadow p-6">
-                            <h3 class="text-lg font-semibold text-slate-800 mb-4">Estado de la Flota</h3>
-                            <canvas id="fleetStatusChart"></canvas>
-                        </div>
-                        <div class="bg-white rounded-lg card-shadow p-6 lg:col-span-2">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-lg font-semibold text-slate-800">Resumen Ejecutivo</h3>
-                                <button id="exportReportBtn" class="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2">
-                                    <i class="fas fa-download"></i>
-                                    Exportar CSV
-                                </button>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="p-4 bg-slate-50 rounded-lg">
-                                    <p class="text-sm text-slate-600">Costo Promedio por Vehículo</p>
-                                    <p class="text-2xl font-bold text-slate-900 mt-2" id="avgCostVehicle">$0</p>
-                                </div>
-                                <div class="p-4 bg-slate-50 rounded-lg">
-                                    <p class="text-sm text-slate-600">Valor Comercial Total</p>
-                                    <p class="text-2xl font-bold text-slate-900 mt-2" id="totalValue">$0</p>
-                                </div>
-                                <div class="p-4 bg-slate-50 rounded-lg">
-                                    <p class="text-sm text-slate-600">Tasa de Disponibilidad</p>
-                                    <p class="text-2xl font-bold text-slate-900 mt-2" id="availabilityRate">0%</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </section>
