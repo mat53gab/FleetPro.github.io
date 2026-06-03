@@ -1182,30 +1182,30 @@ const FleetPro = {
 
     renderCalendar() {
         const grid = document.getElementById('calendarGrid')
-        if (grid) {
-            // Forzamos el layout de 7 columnas por código para asegurar la cuadrícula
-            // Esto resuelve problemas si Tailwind no detecta las clases inyectadas
-            grid.style.display = 'grid';
-            grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
-            grid.className = "grid gap-2 w-full mb-4";
-        }
+        if (!grid) return
+
+        // Forzamos el layout de 7 columnas por código para asegurar la cuadrícula
+        grid.style.display = 'grid';
+        grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
+        grid.className = "grid gap-2 w-full mb-4";
+
         const monthDisplay = document.getElementById('currentMonth')
         const year = this.data.currentMonth.getFullYear()
         const month = this.data.currentMonth.getMonth()
 
         const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-        monthDisplay.textContent = `${monthNames[month]} ${year}`
+        if (monthDisplay) monthDisplay.textContent = `${monthNames[month]} ${year}`
 
         const firstDay = new Date(year, month, 1).getDay()
         const daysInMonth = new Date(year, month + 1, 0).getDate()
 
         grid.innerHTML = ''
         ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(day => {
-            grid.innerHTML += `<div class="text-center font-bold text-slate-500 text-xs uppercase tracking-wider py-2">${day}</div>`
+            grid.innerHTML += `<div class="text-center font-bold text-slate-500 text-xs uppercase py-2">${day}</div>`
         })
 
         for (let i = 0; i < firstDay; i++) {
-            grid.innerHTML += '<div class="calendar-day bg-slate-50 border border-slate-200 rounded-lg h-28 opacity-40"></div>'
+            grid.innerHTML += '<div class="calendar-day bg-slate-50 rounded-lg opacity-40" style="border: 1px solid #e2e8f0; height: 110px;"></div>'
         }
 
         for (let day = 1; day <= daysInMonth; day++) {
@@ -1220,7 +1220,14 @@ const FleetPro = {
             })
 
             const isToday = this.formatDate(new Date()) === dateStr
-            grid.innerHTML += `<div class="calendar-day border border-slate-300 shadow-sm rounded-lg p-2 h-28 overflow-hidden transition-all hover:border-blue-400 hover:shadow-md ${isToday ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' : 'bg-white'}">${dayContent}</div>`
+            const borderStyle = isToday ? '2px solid #3b82f6' : '1px solid #cbd5e1'
+            const bgColor = isToday ? '#eff6ff' : '#ffffff'
+            
+            grid.innerHTML += `
+                <div class="calendar-day shadow-sm rounded-lg p-2 transition-all hover:shadow-md" 
+                     style="border: ${borderStyle}; background-color: ${bgColor}; height: 110px; overflow-y: auto;">
+                    ${dayContent}
+                </div>`
         }
     },
 
