@@ -18,6 +18,7 @@ async function getRoleFromDB(userId) {
             return 'user'
         }
 
+
         const finalRole = data?.role?.toString().trim().toLowerCase() || 'user'
         console.log(`[DB] Verificación de Rol para ${userId}: ${finalRole.toUpperCase()}`)
         return finalRole
@@ -121,6 +122,14 @@ async function login() {
     document.getElementById('currentUserName').textContent = FleetPro.user.fullName
     document.getElementById('currentUserRole').textContent = FleetPro.user.role === 'admin' ? 'Administrador' : FleetPro.user.role === 'manager' ? 'Gerente' : 'Usuario'
     document.getElementById('currentUserAvatar').textContent = FleetPro.user.role === 'admin' ? 'MS' : FleetPro.user.role === 'manager' ? 'DG' : (FleetPro.user.email || 'U').slice(0, 2).toUpperCase()
+    
+    // Determinamos las etiquetas de UI basadas en el rol detectado
+    const roleLabel = role === 'admin' ? 'Administrador' : role === 'manager' ? 'Gerente' : 'Usuario'
+    const avatarLabel = role === 'admin' ? 'MS' : role === 'manager' ? 'DG' : (FleetPro.user.email || 'U').slice(0, 2).toUpperCase()
+    
+    document.getElementById('currentUserRole').textContent = roleLabel
+    document.getElementById('currentUserAvatar').textContent = avatarLabel
+
     await FleetPro.loadBlockState()
     await FleetPro.loadData()
     FleetPro.populateSelects()
@@ -365,6 +374,14 @@ const FleetPro = {
         document.getElementById('currentUserName').textContent = this.user.fullName
         document.getElementById('currentUserRole').textContent = role === 'admin' ? 'Administrador' : role === 'manager' ? 'Gerente' : 'Usuario'
         document.getElementById('currentUserAvatar').textContent = role === 'admin' ? 'MS' : role === 'manager' ? 'DG' : (this.user.email || 'U').slice(0, 2).toUpperCase()
+        
+        // Actualización de etiquetas para sesiones persistentes
+        const roleLabel = role === 'admin' ? 'Administrador' : role === 'manager' ? 'Gerente' : 'Usuario'
+        const avatarLabel = role === 'admin' ? 'MS' : role === 'manager' ? 'DG' : (this.user.email || 'U').slice(0, 2).toUpperCase()
+        
+        document.getElementById('currentUserRole').textContent = roleLabel
+        document.getElementById('currentUserAvatar').textContent = avatarLabel
+
         await this.loadData()
         this.populateSelects()
         this.populateManagerUsers()
