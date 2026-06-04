@@ -1,3 +1,7 @@
+  -- 0. ASEGURAR COLUMNAS
+  ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email text;
+  ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS username text;
+
   -- 1. FUNCIÓN DE ROLES ACTUALIZADA (Sin recursión)
   -- Usamos CREATE OR REPLACE para no romper las dependencias de las tablas existentes
   CREATE OR REPLACE FUNCTION public.has_role(target_roles text[])

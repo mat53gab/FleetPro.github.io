@@ -7,7 +7,10 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 // Fallback local credentials (insecure - only use for quick tests)
 async function getRoleFromDB(userId) {
     const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).single()
-    if (error || !data) return 'user'
+    if (error || !data) {
+        console.warn('No se pudo obtener el rol, usando "user":', error);
+        return 'user';
+    }
     return data.role
 }
 
@@ -92,7 +95,7 @@ async function login() {
     FleetPro.user = {
         ...user,
         role,
-        isManager: role === 'manager',
+        isManager: role === 'manager' || role === 'admin',
         isAdmin: role === 'admin',
         fullName: user.user_metadata?.full_name || user.email || 'Usuario'
     }
@@ -333,7 +336,7 @@ const FleetPro = {
         this.user = {
             ...sessionUser,
             role,
-            isManager: role === 'manager',
+            isManager: role === 'manager' || role === 'admin',
             isAdmin: role === 'admin',
             fullName: sessionUser.user_metadata?.full_name || sessionUser.email || 'Usuario'
         }
@@ -1214,14 +1217,12 @@ const FleetPro = {
 
         // 1. Cabeceras (Dom, Lun...)
         ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'].forEach(dayName => {
-            html += `<div style="text-align:center; font-weight:bold; color:#1e293b; font-size:12px; padding:12px; background:#f1f5f9; border:1px solid #94a3b8; text-transform:uppercase;">${dayName}</div>`
             html += `<div style="text-align:center; font-weight:bold; color:#475569; font-size:11px; padding:10px; background:#f8fafc; text-transform:uppercase; border-bottom:1px solid #e2e8f0;">${dayName}</div>`
         })
 
         // 2. Espacios en blanco mes anterior
         for (let i = 0; i < firstDay; i++) {
-            html += '<div style="border:1px solid #cbd5e1; height:120px; background:#fafafa; opacity:0.5;"></div>'
-            html += '<div style="background:#f8fafc; height:110px; opacity:0.5;"></div>'
+            html += '<div style="background:#f8fafc; height:110px; opacity:0.5; border:1px solid #e2e8f0;"></div>'
         }
 
         // Días del mes actual
@@ -1240,8 +1241,7 @@ const FleetPro = {
             const bgColor = isToday ? '#eff6ff' : '#ffffff'
             
             html += `
-                <div style="border:${borderStyle}; background-color:${bgColor}; height:120px; padding:8px; overflow-y:auto; display:block !important; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);">
-                <div style="background-color:${bgColor}; min-height:120px; padding:8px; overflow-y:auto; border:1px solid #e2e8f0; position:relative; box-shadow: ${isToday ? 'inset 0 0 0 2px #2563eb' : 'none'};">
+                <div style="background-color:${bgColor}; min-height:120px; padding:8px; overflow-y:auto; border:1px solid #e2e8f0; position:relative; box-shadow: ${isToday ? 'inset 0 0 0 2px #2563eb' : 'none'}; border-color: ${isToday ? '#2563eb' : '#e2e8f0'};">
                     <div style="font-weight:bold; color:${isToday ? '#2563eb' : '#1e293b'}; font-size:14px; margin-bottom:4px;">${day}</div>
                     ${maintenanceLabels}
                 </div>`
