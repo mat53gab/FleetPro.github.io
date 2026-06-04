@@ -18,7 +18,7 @@ async function getRoleFromDB(userId) {
             return 'user'
         }
 
-        console.log("Rol obtenido de DB:", data?.role)
+        console.log(`[DB] Rol obtenido para ${userId}:`, data?.role)
         return data?.role?.toLowerCase() || 'user'
     } catch (err) {
         console.error(err)
@@ -104,7 +104,7 @@ async function login() {
     }
 
     const role = await getRoleFromDB(user.id)
-    console.log('Inicio de sesión exitoso. Rol detectado:', role)
+    console.log(`[AUTH] Login exitoso para ${email}. Rol asignado: ${role}`)
 
     FleetPro.user = {
         ...user,
