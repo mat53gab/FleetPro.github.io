@@ -18,8 +18,9 @@ async function getRoleFromDB(userId) {
             return 'user'
         }
 
-        console.log(`[DB] Rol obtenido para ${userId}:`, data?.role)
-        return data?.role?.toLowerCase() || 'user'
+        const finalRole = data?.role?.trim().toLowerCase() || 'user'
+        console.log(`[DB] Rol obtenido para ${userId}:`, finalRole)
+        return finalRole
     } catch (err) {
         console.error(err)
         return 'user'
