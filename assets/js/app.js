@@ -6,12 +6,17 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Fallback local credentials (insecure - only use for quick tests)
 async function getRoleFromDB(userId) {
-    const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).single()
-    if (error || !data) {
-        console.warn('No se pudo obtener el rol, usando "user":', error);
-        return 'user';
+    try {
+        const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).single()
+        if (error) {
+            console.warn('No se pudo obtener el rol de la base de datos:', error.message)
+            return 'user'
+        }
+        return data?.role?.toLowerCase() || 'user'
+    } catch (err) {
+        console.error('Error en getRoleFromDB:', err)
+        return 'user'
     }
-    return data.role
 }
 
 function showLogin() {
@@ -92,6 +97,8 @@ async function login() {
     }
 
     const role = await getRoleFromDB(user.id)
+    console.log('Inicio de sesión exitoso. Rol detectado:', role)
+
     FleetPro.user = {
         ...user,
         role,
@@ -333,6 +340,8 @@ const FleetPro = {
         }
 
         const role = await getRoleFromDB(sessionUser.id)
+        console.log('Sesión recuperada. Rol detectado:', role)
+
         this.user = {
             ...sessionUser,
             role,
