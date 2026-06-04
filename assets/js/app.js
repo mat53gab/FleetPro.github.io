@@ -13,14 +13,12 @@ async function getRoleFromDB(userId) {
             .eq('id', userId)
             .single()
 
-        console.log("USER ID:", userId)
-        console.log("ROLE DATA:", data)
-        console.log("ROLE ERROR:", error)
-
         if (error) {
+            console.warn("Aviso: No se encontró perfil en DB para el ID:", userId, error.message)
             return 'user'
         }
 
+        console.log("Rol obtenido de DB:", data?.role)
         return data?.role?.toLowerCase() || 'user'
     } catch (err) {
         console.error(err)
@@ -120,8 +118,8 @@ async function login() {
     document.getElementById('logoutBtn').classList.remove('hidden')
     document.querySelector('.fleetpro-auth').style.display = 'none'
     document.getElementById('currentUserName').textContent = FleetPro.user.fullName
-    document.getElementById('currentUserRole').textContent = FleetPro.user.isAdmin ? 'Administrador' : FleetPro.user.isManager ? 'Gerente' : 'Usuario'
-    document.getElementById('currentUserAvatar').textContent = FleetPro.user.isAdmin ? 'MS' : FleetPro.user.isManager ? 'DG' : (FleetPro.user.email || 'U').slice(0, 2).toUpperCase()
+    document.getElementById('currentUserRole').textContent = role === 'admin' ? 'Administrador' : role === 'manager' ? 'Gerente' : 'Usuario'
+    document.getElementById('currentUserAvatar').textContent = role === 'admin' ? 'MS' : role === 'manager' ? 'DG' : (FleetPro.user.email || 'U').slice(0, 2).toUpperCase()
     await FleetPro.loadBlockState()
     await FleetPro.loadData()
     FleetPro.populateSelects()
@@ -349,7 +347,7 @@ const FleetPro = {
         }
 
         const role = await getRoleFromDB(sessionUser.id)
-        console.log('Sesión recuperada. Rol detectado:', role)
+        console.log('Sesión persistente recuperada. Rol:', role)
 
         this.user = {
             ...sessionUser,
@@ -364,8 +362,8 @@ const FleetPro = {
         document.getElementById('logoutBtn').classList.remove('hidden')
         document.querySelector('.fleetpro-auth').style.display = 'none'
         document.getElementById('currentUserName').textContent = this.user.fullName
-        document.getElementById('currentUserRole').textContent = this.user.isAdmin ? 'Administrador' : this.user.isManager ? 'Gerente' : 'Usuario'
-        document.getElementById('currentUserAvatar').textContent = this.user.isAdmin ? 'MS' : this.user.isManager ? 'DG' : (this.user.email || 'U').slice(0, 2).toUpperCase()
+        document.getElementById('currentUserRole').textContent = role === 'admin' ? 'Administrador' : role === 'manager' ? 'Gerente' : 'Usuario'
+        document.getElementById('currentUserAvatar').textContent = role === 'admin' ? 'MS' : role === 'manager' ? 'DG' : (this.user.email || 'U').slice(0, 2).toUpperCase()
         await this.loadData()
         this.populateSelects()
         this.populateManagerUsers()
