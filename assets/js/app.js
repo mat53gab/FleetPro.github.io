@@ -7,14 +7,23 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 // Fallback local credentials (insecure - only use for quick tests)
 async function getRoleFromDB(userId) {
     try {
-        const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).single()
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', userId)
+            .single()
+
+        console.log("USER ID:", userId)
+        console.log("ROLE DATA:", data)
+        console.log("ROLE ERROR:", error)
+
         if (error) {
-            console.warn('No se pudo obtener el rol de la base de datos:', error.message)
             return 'user'
         }
+
         return data?.role?.toLowerCase() || 'user'
     } catch (err) {
-        console.error('Error en getRoleFromDB:', err)
+        console.error(err)
         return 'user'
     }
 }
