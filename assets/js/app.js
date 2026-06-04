@@ -1189,6 +1189,16 @@ const FleetPro = {
         grid.style.minHeight = '450px';
         grid.style.visibility = 'visible';
         grid.style.opacity = '1';
+        grid.style.cssText = `
+            display: grid !important;
+            grid-template-columns: repeat(7, 1fr) !important;
+            gap: 2px !important;
+            background-color: #e2e8f0 !important;
+            border: 2px solid #e2e8f0 !important;
+            width: 100% !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+        `;
 
         const monthDisplay = document.getElementById('currentMonth')
         const year = this.data.currentMonth.getFullYear()
@@ -1205,11 +1215,13 @@ const FleetPro = {
         // 1. Cabeceras (Dom, Lun...)
         ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'].forEach(dayName => {
             html += `<div style="text-align:center; font-weight:bold; color:#1e293b; font-size:12px; padding:12px; background:#f1f5f9; border:1px solid #94a3b8; text-transform:uppercase;">${dayName}</div>`
+            html += `<div style="text-align:center; font-weight:bold; color:#475569; font-size:11px; padding:10px; background:#f8fafc; text-transform:uppercase; border-bottom:1px solid #e2e8f0;">${dayName}</div>`
         })
 
         // 2. Espacios en blanco mes anterior
         for (let i = 0; i < firstDay; i++) {
             html += '<div style="border:1px solid #cbd5e1; height:120px; background:#fafafa; opacity:0.5;"></div>'
+            html += '<div style="background:#f8fafc; height:110px; opacity:0.5;"></div>'
         }
 
         // Días del mes actual
@@ -1229,6 +1241,7 @@ const FleetPro = {
             
             html += `
                 <div style="border:${borderStyle}; background-color:${bgColor}; height:120px; padding:8px; overflow-y:auto; display:block !important; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);">
+                <div style="background-color:${bgColor}; min-height:120px; padding:8px; overflow-y:auto; border:1px solid #e2e8f0; position:relative; box-shadow: ${isToday ? 'inset 0 0 0 2px #2563eb' : 'none'};">
                     <div style="font-weight:bold; color:${isToday ? '#2563eb' : '#1e293b'}; font-size:14px; margin-bottom:4px;">${day}</div>
                     ${maintenanceLabels}
                 </div>`
@@ -1445,20 +1458,6 @@ const FleetPro = {
         a.click()
         window.URL.revokeObjectURL(url)
         this.showToast('Reporte exportado exitosamente', 'success')
-    },
-
-    showToast(message, type = 'info') {
-        const container = document.getElementById('toastContainer')
-        const toast = document.createElement('div')
-        const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-        toast.className = `toast ${bgColor} text-white px-6 py-3 rounded-lg card-shadow-lg flex items-center gap-3`
-        toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i><span>${message}</span>`
-        container.appendChild(toast)
-        setTimeout(() => {
-            toast.style.opacity = '0'
-            toast.style.transform = 'translateX(100%)'
-            setTimeout(() => toast.remove(), 300)
-        }, 3000)
     },
 
     formatDate(date) {
