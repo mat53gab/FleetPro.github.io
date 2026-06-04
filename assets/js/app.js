@@ -18,8 +18,8 @@ async function getRoleFromDB(userId) {
             return 'user'
         }
 
-        const finalRole = data?.role?.trim().toLowerCase() || 'user'
-        console.log(`[DB] Rol obtenido para ${userId}:`, finalRole)
+        const finalRole = data?.role?.toString().trim().toLowerCase() || 'user'
+        console.log(`[DB] Verificación de Rol para ${userId}: ${finalRole.toUpperCase()}`)
         return finalRole
     } catch (err) {
         console.error(err)
@@ -119,8 +119,8 @@ async function login() {
     document.getElementById('logoutBtn').classList.remove('hidden')
     document.querySelector('.fleetpro-auth').style.display = 'none'
     document.getElementById('currentUserName').textContent = FleetPro.user.fullName
-    document.getElementById('currentUserRole').textContent = role === 'admin' ? 'Administrador' : role === 'manager' ? 'Gerente' : 'Usuario'
-    document.getElementById('currentUserAvatar').textContent = role === 'admin' ? 'MS' : role === 'manager' ? 'DG' : (FleetPro.user.email || 'U').slice(0, 2).toUpperCase()
+    document.getElementById('currentUserRole').textContent = FleetPro.user.role === 'admin' ? 'Administrador' : FleetPro.user.role === 'manager' ? 'Gerente' : 'Usuario'
+    document.getElementById('currentUserAvatar').textContent = FleetPro.user.role === 'admin' ? 'MS' : FleetPro.user.role === 'manager' ? 'DG' : (FleetPro.user.email || 'U').slice(0, 2).toUpperCase()
     await FleetPro.loadBlockState()
     await FleetPro.loadData()
     FleetPro.populateSelects()
