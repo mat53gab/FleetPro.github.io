@@ -119,20 +119,19 @@ async function login() {
     document.getElementById('app').classList.remove('hidden')
     document.getElementById('logoutBtn').classList.remove('hidden')
     document.querySelector('.fleetpro-auth').style.display = 'none'
+
+    // Actualizamos la UI con los datos procesados
+    const roleLabel = FleetPro.user.isAdmin ? 'Administrador' : FleetPro.user.isManager ? 'Gerente' : 'Usuario'
+    const avatarLabel = FleetPro.user.isAdmin ? 'AD' : FleetPro.user.isManager ? 'GE' : (user.email || 'U').slice(0, 2).toUpperCase()
+
     document.getElementById('currentUserName').textContent = FleetPro.user.fullName
-    document.getElementById('currentUserRole').textContent = FleetPro.user.role === 'admin' ? 'Administrador' : FleetPro.user.role === 'manager' ? 'Gerente' : 'Usuario'
-    document.getElementById('currentUserAvatar').textContent = FleetPro.user.role === 'admin' ? 'MS' : FleetPro.user.role === 'manager' ? 'DG' : (FleetPro.user.email || 'U').slice(0, 2).toUpperCase()
-    
-    // Determinamos las etiquetas de UI basadas en el rol detectado
-    const roleLabel = role === 'admin' ? 'Administrador' : role === 'manager' ? 'Gerente' : 'Usuario'
-    const avatarLabel = role === 'admin' ? 'MS' : role === 'manager' ? 'DG' : (FleetPro.user.email || 'U').slice(0, 2).toUpperCase()
-    
     document.getElementById('currentUserRole').textContent = roleLabel
     document.getElementById('currentUserAvatar').textContent = avatarLabel
 
     await FleetPro.loadBlockState()
     await FleetPro.loadData()
     FleetPro.populateSelects()
+    FleetPro.populateManagerUsers()
     FleetPro.renderAll()
     FleetPro.updateDashboard()
 }
@@ -371,16 +370,10 @@ const FleetPro = {
         document.getElementById('app').classList.remove('hidden')
         document.getElementById('logoutBtn').classList.remove('hidden')
         document.querySelector('.fleetpro-auth').style.display = 'none'
+        
         document.getElementById('currentUserName').textContent = this.user.fullName
-        document.getElementById('currentUserRole').textContent = role === 'admin' ? 'Administrador' : role === 'manager' ? 'Gerente' : 'Usuario'
-        document.getElementById('currentUserAvatar').textContent = role === 'admin' ? 'MS' : role === 'manager' ? 'DG' : (this.user.email || 'U').slice(0, 2).toUpperCase()
-        
-        // Actualización de etiquetas para sesiones persistentes
-        const roleLabel = role === 'admin' ? 'Administrador' : role === 'manager' ? 'Gerente' : 'Usuario'
-        const avatarLabel = role === 'admin' ? 'MS' : role === 'manager' ? 'DG' : (this.user.email || 'U').slice(0, 2).toUpperCase()
-        
-        document.getElementById('currentUserRole').textContent = roleLabel
-        document.getElementById('currentUserAvatar').textContent = avatarLabel
+        document.getElementById('currentUserRole').textContent = this.user.isAdmin ? 'Administrador' : this.user.isManager ? 'Gerente' : 'Usuario'
+        document.getElementById('currentUserAvatar').textContent = this.user.isAdmin ? 'AD' : this.user.isManager ? 'GE' : (this.user.email || 'U').slice(0, 2).toUpperCase()
 
         await this.loadData()
         this.populateSelects()
@@ -560,16 +553,6 @@ const FleetPro = {
         document.getElementById('loginTab').addEventListener('click', showLogin)
         document.getElementById('registerTab').addEventListener('click', showRegister)
         document.getElementById('loginBtn').addEventListener('click', login)
-        document.getElementById('managerLoginBtn').addEventListener('click', login)
-        document.getElementById('adminLoginBtn').addEventListener('click', login)
-        document.getElementById('showManagerPanelBtn').addEventListener('click', () => {
-            document.getElementById('managerPanel').classList.remove('hidden')
-            document.getElementById('showManagerPanelBtn').classList.add('hidden')
-        })
-        document.getElementById('showAdminPanelBtn').addEventListener('click', () => {
-            document.getElementById('adminPanel').classList.remove('hidden')
-            document.getElementById('showAdminPanelBtn').classList.add('hidden')
-        })
         document.getElementById('registerBtn').addEventListener('click', register)
         document.getElementById('blockBtn').addEventListener('click', () => this.setBlockState(true))
         document.getElementById('unblockBtn').addEventListener('click', () => this.setBlockState(false))

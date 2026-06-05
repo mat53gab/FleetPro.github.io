@@ -55,10 +55,18 @@
   DROP POLICY IF EXISTS "Profiles: admin puede ver todos los perfiles" ON public.profiles;
   DROP POLICY IF EXISTS "Profiles: usuario puede crear su propio perfil" ON public.profiles;
 
-  -- Los usuarios pueden ver solo su propio perfil
-  CREATE POLICY "Profiles: user puede ver su propio perfil" 
+  -- Permite que cualquier usuario autenticado vea su propio perfil
+  CREATE POLICY "Profiles: ver perfil propio" 
   ON public.profiles FOR SELECT 
   USING (auth.uid() = id);
+
+  -- Permite búsqueda de email por username (necesario para el login por username)
+  -- Solo permite ver columnas básicas para no exponer datos sensibles
+  DROP POLICY IF EXISTS "Profiles: busqueda publica de username" ON public.profiles;
+  CREATE POLICY "Profiles: busqueda publica de username" 
+  ON public.profiles FOR SELECT 
+  TO anon, authenticated
+  USING (true);
 
   -- Los admins pueden ver todos (usando la función segura que definimos arriba)
   CREATE POLICY "Profiles: admin puede ver todos los perfiles" 
@@ -78,3 +86,12 @@
   GRANT USAGE ON SCHEMA public TO anon, authenticated;
   GRANT ALL ON TABLE public.profiles TO postgres, service_role;
   GRANT SELECT ON TABLE public.profiles TO authenticated;
+
+  -- ==========================================
+  -- COMANDO PARA DARTE ACCESO (REMPLAZA EL EMAIL)
+  -- ==========================================
+  -- Ejecuta esta línea cada vez que quieras subir de rango a alguien:
+  
+  UPDATE public.profiles 
+  SET role = 'admin' 
+  WHERE email = 'tu-correo@ejemplo.com'; -- <--- CAMBIA ESTO
