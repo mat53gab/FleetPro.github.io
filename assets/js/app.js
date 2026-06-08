@@ -498,108 +498,119 @@ const FleetPro = {
     },
 
     setupEventListeners() {
-        try {
-            // Función de escucha ultra-segura
-            const listen = (id, event, fn) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.addEventListener(event, fn);
-                } else {
-                    console.warn(`[DOM] No se encontró el elemento con ID: ${id}. El evento ${event} no fue asignado.`);
-                }
-            };
+        const listen = (id, event, fn) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener(event, fn);
+        };
 
-            // 1. AUTH - Prioridad máxima
-            listen('loginTab', 'click', showLogin);
-            listen('registerTab', 'click', showRegister);
-            listen('loginBtn', 'click', (e) => {
-                console.log("[AUTH] Click en botón de login detectado");
-                login(e);
-            });
-            listen('registerBtn', 'click', register);
-            listen('logoutBtn', 'click', () => this.logout());
+        // 1. AUTH - Control de pestañas y botones principales
+        listen('loginTab', 'click', showLogin);
+        listen('registerTab', 'click', showRegister);
+        listen('loginBtn', 'click', login);
+        listen('registerBtn', 'click', register);
+        listen('logoutBtn', 'click', () => this.logout());
 
-            // 2. PANELES ESPECIALES
-            listen('showManagerPanelBtn', 'click', () => {
-                document.getElementById('managerPanel')?.classList.toggle('hidden');
-                document.getElementById('adminPanel')?.classList.add('hidden');
-            });
-            listen('showAdminPanelBtn', 'click', () => {
-                document.getElementById('adminPanel')?.classList.toggle('hidden');
-                document.getElementById('managerPanel')?.classList.add('hidden');
-            });
-            listen('managerLoginBtn', 'click', () => this.loginAsRole('manager'));
-            listen('adminLoginBtn', 'click', () => this.loginAsRole('admin'));
+        // 2. PANELES DE ACCESO RÁPIDO (Gerente / Admin)
+        listen('showManagerPanelBtn', 'click', () => {
+            const mp = document.getElementById('managerPanel');
+            const ap = document.getElementById('adminPanel');
+            if (mp) mp.classList.toggle('hidden');
+            if (ap) ap.classList.add('hidden');
+        });
+        listen('showAdminPanelBtn', 'click', () => {
+            const ap = document.getElementById('adminPanel');
+            const mp = document.getElementById('managerPanel');
+            if (ap) ap.classList.toggle('hidden');
+            if (mp) mp.classList.add('hidden');
+        });
 
-            // 3. NAVEGACIÓN Y UI GENERAL
-            document.querySelectorAll('.sidebar-link').forEach(link => {
-                link.addEventListener('click', e => {
-                    e.preventDefault();
-                    if (link.dataset.section) this.navigateTo(link.dataset.section);
+        listen('managerLoginBtn', 'click', () => this.loginAsRole('manager'));
+        listen('adminLoginBtn', 'click', () => this.loginAsRole('admin'));
+
+        // 3. NAVEGACIÓN LATERAL
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                const section = link.getAttribute('data-section');
+                if (section) this.navigateTo(section);
+            });
+        });
+
+        listen('mobileMenuBtn', 'click', () => {
+            const sb = document.getElementById('sidebar');
+            if (sb) sb.classList.toggle('hidden');
+        });
+        document.querySelectorAll('.closeModal').forEach(btn => btn.addEventListener('click', () => this.closeAllModals()));
+
+        // 4. ACCIONES DE FORMULARIOS
+        listen('addVehicleBtn', 'click', () => this.openVehicleModal());
+        listen('addMaintenanceBtn', 'click', () => this.openMaintenanceModal());
+        listen('addInsuranceBtn', 'click', () => this.openInsuranceModal());
+
+        listen('vehicleForm', 'submit', e => this.saveVehicle(e));
+        listen('maintenanceForm', 'submit', e => this.saveMaintenance(e));
+        listen('insuranceForm', 'submit', e => this.saveInsurance(e));
+
+        listen('estado', 'change', e => {
+            const isInactive = e.target.value !== 'activo';
+            const fbc = document.getElementById('fechaBajaContainer');
+            const mbc = document.getElementById('motivoBajaContainer');
+            if (fbc) fbc.classList.toggle('hidden', !isInactive);
+            if (mbc) mbc.classList.toggle('hidden', !isInactive);
+        });
+
+        // 5. FILTROS Y TABLAS DINÁMICAS
+        listen('searchVehicle', 'input', () => this.renderVehicles());
+        listen('filterType', 'change', () => this.renderVehicles());
+        listen('filterStatus', 'change', () => this.renderVehicles());
+        listen('managerUserFilter', 'change', () => this.renderManagerSection());
+
+        ['vehiclesTableBody', 'maintenanceTableBody', 'insuranceTableBody'].forEach(tableId => {
+            const el = document.getElementById(tableId);
+            if (el) {
+                el.addEventListener('click', e => {
+                    const btn = e.target.closest('button[data-action]');
+                    if (!btn) return;
+                    const id = Number(btn.dataset.id);
+                    const action = btn.dataset.action;
+                    if (action === 'edit-vehicle') this.openVehicleModal(this.getVehicleById(id));
+                    if (action === 'delete-vehicle') this.deleteVehicle(id);
+                    if (action === 'edit-maintenance') this.openMaintenanceModal(this.getMaintenanceById(id));
+                    if (action === 'delete-maintenance') this.deleteMaintenance(id);
+                    if (action === 'edit-insurance') this.openInsuranceModal(this.getInsuranceById(id));
+                    if (action === 'delete-insurance') this.deleteInsurance(id);
                 });
-            });
+            }
+        });
 
-            listen('mobileMenuBtn', 'click', () => document.getElementById('sidebar')?.classList.toggle('hidden'));
-            document.querySelectorAll('.closeModal').forEach(btn => btn.addEventListener('click', () => this.closeAllModals()));
-
-            // 4. FORMULARIOS Y ACCIONES
-            listen('addVehicleBtn', 'click', () => this.openVehicleModal());
-            listen('addMaintenanceBtn', 'click', () => this.openMaintenanceModal());
-            listen('addInsuranceBtn', 'click', () => this.openInsuranceModal());
-
-            listen('vehicleForm', 'submit', e => this.saveVehicle(e));
-            listen('maintenanceForm', 'submit', e => this.saveMaintenance(e));
-            listen('insuranceForm', 'submit', e => this.saveInsurance(e));
-
-            listen('estado', 'change', e => {
-                const isInactive = e.target.value !== 'activo';
-                document.getElementById('fechaBajaContainer')?.classList.toggle('hidden', !isInactive);
-                document.getElementById('motivoBajaContainer')?.classList.toggle('hidden', !isInactive);
-            });
-
-            // 5. FILTROS Y TABLAS
-            listen('searchVehicle', 'input', () => this.renderVehicles());
-            listen('filterType', 'change', () => this.renderVehicles());
-            listen('filterStatus', 'change', () => this.renderVehicles());
-            listen('managerUserFilter', 'change', () => this.renderManagerSection());
-
-            ['vehiclesTableBody', 'maintenanceTableBody', 'insuranceTableBody'].forEach(tableId => {
-                const table = document.getElementById(tableId);
-                if (table) {
-                    table.addEventListener('click', e => {
-                        const btn = e.target.closest('button[data-action]');
-                        if (!btn) return;
-                        const id = Number(btn.dataset.id);
-                        const action = btn.dataset.action;
-                        if (action === 'edit-vehicle') this.openVehicleModal(this.getVehicleById(id));
-                        if (action === 'delete-vehicle') this.deleteVehicle(id);
-                        if (action === 'edit-maintenance') this.openMaintenanceModal(this.getMaintenanceById(id));
-                        if (action === 'delete-maintenance') this.deleteMaintenance(id);
-                        if (action === 'edit-insurance') this.openInsuranceModal(this.getInsuranceById(id));
-                        if (action === 'delete-insurance') this.deleteInsurance(id);
-                    });
-                }
-            });
-
-            // 6. CALENDARIO Y DESCARGAS
-            listen('prevMonth', 'click', () => this.changeMonth(-1));
-            listen('nextMonth', 'click', () => this.changeMonth(1));
-            listen('descargarBaseDatos', 'click', descargarBaseDatos);
-            listen('descargarReportesPDF', 'click', descargarReportesPDF);
-            listen('blockBtn', 'click', () => this.setBlockState(true));
-            listen('unblockBtn', 'click', () => this.setBlockState(false));
-
-        } catch (err) {
-            console.error("Error crítico en setupEventListeners:", err);
-        }
+        // 6. CALENDARIO, DESCARGAS Y BLOQUEO
+        listen('prevMonth', 'click', () => this.changeMonth(-1));
+        listen('nextMonth', 'click', () => this.changeMonth(1));
+        listen('descargarBaseDatos', 'click', descargarBaseDatos);
+        listen('descargarReportesPDF', 'click', descargarReportesPDF);
+        listen('blockBtn', 'click', () => this.setBlockState(true));
+        listen('unblockBtn', 'click', () => this.setBlockState(false));
     },
 
     async loginAsRole(role) {
-        // Esta función es para los botones de login de gerente/administrador.
-        // Aquí iría la lógica específica para autenticar a estos roles,
-        // por ejemplo, pre-llenar credenciales o usar un método de login diferente.
-        alert(`Intentando iniciar sesión como ${role}. Implementa la lógica de autenticación aquí.`)
-        // Por ahora, solo muestra una alerta.
+        const userEl = document.getElementById(`${role}Username`);
+        const passEl = document.getElementById(`${role}Password`);
+        const user = userEl ? userEl.value.trim() : '';
+        const pass = passEl ? passEl.value : '';
+
+        if (!user || !pass) {
+            alert(`Por favor, ingresa las credenciales de ${role === 'manager' ? 'Gerente' : 'Administrador'}`);
+            return;
+        }
+
+        // Llenamos el formulario principal y ejecutamos el login
+        const emailInput = document.getElementById('loginEmail');
+        const passInput = document.getElementById('loginPassword');
+        if (emailInput && passInput) {
+            emailInput.value = user;
+            passInput.value = pass;
+            login(); 
+        }
     },
 
     navigateTo(section) {
@@ -1415,25 +1426,25 @@ const FleetPro = {
         })
 
         const typeCanvas = document.getElementById('vehicleTypeChart')
-        if (!typeCanvas) return // Si no hay canvas, no intentamos dibujar nada
-
-        if (this.charts?.vehicleType) this.charts.vehicleType.destroy()
         this.charts = this.charts || {}
-        this.charts.vehicleType = new Chart(typeCanvas, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(typeCount),
-                datasets: [{
-                    data: Object.values(typeCount),
-                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { position: 'bottom' } }
-            }
-        })
+        if (typeCanvas) {
+            if (this.charts.vehicleType) this.charts.vehicleType.destroy()
+            this.charts.vehicleType = new Chart(typeCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(typeCount),
+                    datasets: [{
+                        data: Object.values(typeCount),
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            })
+        }
 
         const monthlyData = Array(12).fill(0)
         const currentYear = new Date().getFullYear()
@@ -1445,27 +1456,27 @@ const FleetPro = {
         })
 
         const expenseCanvas = document.getElementById('expensesChart')
-        if (!expenseCanvas) return
-
-        if (this.charts?.expenses) this.charts.expenses.destroy()
-        this.charts.expenses = new Chart(expenseCanvas, {
-            type: 'bar',
-            data: {
-                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-                datasets: [{
-                    label: 'Gastos ($)',
-                    data: monthlyData,
-                    backgroundColor: '#3b82f6',
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
-            }
-        })
+        if (expenseCanvas) {
+            if (this.charts.expenses) this.charts.expenses.destroy()
+            this.charts.expenses = new Chart(expenseCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                    datasets: [{
+                        label: 'Gastos ($)',
+                        data: monthlyData,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            })
+        }
 
         const maintTypeCount = {}
         this.data.maintenances.forEach(m => {
