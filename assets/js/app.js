@@ -310,7 +310,6 @@ const FleetPro = {
         const sessionUser = data?.session?.user ?? null
 
         if (!sessionUser) {
-            showLogin()
             document.getElementById('logoutBtn').classList.add('hidden')
             return
         }
@@ -945,7 +944,6 @@ const FleetPro = {
         document.getElementById('app').classList.add('hidden')
         document.querySelector('.fleetpro-auth').style.display = 'block'
         document.getElementById('logoutBtn').classList.add('hidden')
-        showLogin()
     },
 
     closeAllModals() {
