@@ -3,7 +3,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
 const supabaseUrl = 'https://yrxqsikkjjumuvvvjxgj.supabase.co'
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlyeHFzaWtramp1bXV2dnZqeGdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MDI4MzYsImexY3CI6MjA5NTQ3ODgzNn0.vCtF-yJLOOI-QTq8j-l7BqgTiC9_oS2aYi4OFl6Y9pU' // Replace with your actual Supabase key
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlyeHFzaWtramp1bXV2dnZqeGdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MDI4MzYsImV4cCI6MjA5NTQ3ODgzNn0.vCtF-yJLOOI-QTq8j-l7BqgTiC9_oS2aYi4OFl6Y9pU' // Replace with your actual Supabase key
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Fallback local credentials (insecure - only use for quick tests)
