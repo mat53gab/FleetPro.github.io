@@ -34,12 +34,27 @@ function showLogin() {
 }
 
 async function login() {
-    let email = document.getElementById('loginEmail').value.trim()
+    let identifier = document.getElementById('loginEmail').value.trim()
     let password = document.getElementById('loginPassword').value
 
-    if (!email || !password) {
-        alert('Ingresa tu correo electrónico y contraseña')
+    if (!identifier || !password) {
+        alert('Ingresa tu correo electrónico o usuario y contraseña')
         return
+    }
+
+    let email = identifier
+    if (!identifier.includes('@')) {
+        const { data: profile, error: profileErr } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('username', identifier)
+            .single()
+
+        if (profileErr || !profile?.email) {
+            alert('Usuario no encontrado')
+            return
+        }
+        email = profile.email
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
