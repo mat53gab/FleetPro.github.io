@@ -44,7 +44,8 @@ function showRegister() {
     document.getElementById('loginTab').classList.remove('active')
 }
 
-async function register() {
+async function register(e) {
+    if (e) e.preventDefault()
     if (FleetPro.isBlocked) {
         alert('El sitio está bloqueado por falta de pago. No se puede crear cuentas ahora.')
         return
@@ -68,72 +69,79 @@ async function register() {
     }
 }
 
-async function login() {
-    let identifier = document.getElementById('loginEmail').value.trim()
-    let password = document.getElementById('loginPassword').value
+async function login(e) {
+    if (e) e.preventDefault()
+    try {
+        let identifier = document.getElementById('loginEmail').value.trim()
+        let password = document.getElementById('loginPassword').value
 
-    if (!identifier || !password) {
-        alert('Por favor, ingresa tu correo electrónico o usuario y la contraseña')
-        return
-    }
-
-    let email = identifier
-    if (!identifier.includes('@')) {
-        const { data: profile, error: profileErr } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('username', identifier)
-            .single()
-
-        if (profileErr || !profile?.email) {
-            alert('Usuario no encontrado')
+        if (!identifier || !password) {
+            alert('Por favor, ingresa tu correo electrónico o usuario y la contraseña')
             return
         }
-        email = profile.email
+
+        let email = identifier
+        if (!identifier.includes('@')) {
+            const { data: profile, error: profileErr } = await supabase
+                .from('profiles')
+                .select('email')
+                .eq('username', identifier)
+                .single()
+
+            if (profileErr || !profile?.email) {
+                alert('Usuario no encontrado')
+                return
+            }
+            email = profile.email
+        }
+
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+        if (error) {
+            alert(error.message)
+            return
+        }
+
+        const user = data?.user ?? data?.session?.user ?? null
+        if (!user) {
+            alert('No se pudo iniciar sesión')
+            return
+        }
+
+        const role = await getRoleFromDB(user.id)
+        console.log(`[AUTH] Login exitoso para ${email}. Rol asignado: ${role}`)
+
+        FleetPro.user = {
+            ...user,
+            role,
+            isManager: role === 'manager' || role === 'admin',
+            isAdmin: role === 'admin',
+            fullName: user.user_metadata?.full_name || user.email || 'Usuario'
+        }
+
+        document.getElementById('app')?.classList.remove('hidden')
+        document.getElementById('logoutBtn')?.classList.remove('hidden')
+        const authContainer = document.querySelector('.fleetpro-auth')
+        if (authContainer) authContainer.style.display = 'none'
+
+        // Actualizamos la UI con los datos procesados
+        const roleLabel = FleetPro.user.isAdmin ? 'Administrador' : FleetPro.user.isManager ? 'Gerente' : 'Usuario'
+        const avatarLabel = FleetPro.user.isAdmin ? 'AD' : FleetPro.user.isManager ? 'GE' : (FleetPro.user.email || 'U').slice(0, 2).toUpperCase()
+
+        if (document.getElementById('currentUserName')) document.getElementById('currentUserName').textContent = FleetPro.user.fullName
+        if (document.getElementById('currentUserRole')) document.getElementById('currentUserRole').textContent = roleLabel
+        if (document.getElementById('currentUserAvatar')) document.getElementById('currentUserAvatar').textContent = avatarLabel
+
+        await FleetPro.loadBlockState()
+        await FleetPro.loadData()
+        FleetPro.populateSelects()
+        FleetPro.populateManagerUsers()
+        FleetPro.renderAll()
+        FleetPro.updateDashboard()
+    } catch (err) {
+        console.error('Error durante el proceso de login:', err)
+        alert('Error inesperado al iniciar sesión: ' + err.message)
     }
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-
-    if (error) {
-        alert(error.message)
-        return
-    }
-
-    const user = data?.user ?? data?.session?.user ?? null
-    if (!user) {
-        alert('No se pudo iniciar sesión')
-        return
-    }
-
-    const role = await getRoleFromDB(user.id)
-    console.log(`[AUTH] Login exitoso para ${email}. Rol asignado: ${role}`)
-
-    FleetPro.user = {
-        ...user,
-        role,
-        isManager: role === 'manager' || role === 'admin',
-        isAdmin: role === 'admin',
-        fullName: user.user_metadata?.full_name || user.email || 'Usuario'
-    }
-
-    document.getElementById('app').classList.remove('hidden')
-    document.getElementById('logoutBtn').classList.remove('hidden')
-    document.querySelector('.fleetpro-auth').style.display = 'none'
-
-    // Actualizamos la UI con los datos procesados
-    const roleLabel = FleetPro.user.isAdmin ? 'Administrador' : FleetPro.user.isManager ? 'Gerente' : 'Usuario'
-    const avatarLabel = FleetPro.user.isAdmin ? 'AD' : FleetPro.user.isManager ? 'GE' : (FleetPro.user.email || 'U').slice(0, 2).toUpperCase()
-
-    document.getElementById('currentUserName').textContent = FleetPro.user.fullName
-    document.getElementById('currentUserRole').textContent = roleLabel
-    document.getElementById('currentUserAvatar').textContent = avatarLabel
-
-    await FleetPro.loadBlockState()
-    await FleetPro.loadData()
-    FleetPro.populateSelects()
-    FleetPro.populateManagerUsers()
-    FleetPro.renderAll()
-    FleetPro.updateDashboard()
 }
 
 const FleetPro = {
@@ -490,58 +498,59 @@ const FleetPro = {
     },
 
     setupEventListeners() {
-        document.getElementById('loginTab').addEventListener('click', showLogin)
-        document.getElementById('registerTab').addEventListener('click', showRegister)
-        document.getElementById('loginBtn').addEventListener('click', login)
-        document.getElementById('registerBtn').addEventListener('click', register)
+        // Usamos ?. para que si el elemento no existe en el HTML, el código no se rompa
+        document.getElementById('loginTab')?.addEventListener('click', showLogin)
+        document.getElementById('registerTab')?.addEventListener('click', showRegister)
+        document.getElementById('loginBtn')?.addEventListener('click', login)
+        document.getElementById('registerBtn')?.addEventListener('click', register)
 
-        document.getElementById('showManagerPanelBtn').addEventListener('click', () => {
-            document.getElementById('managerPanel').classList.toggle('hidden')
-            document.getElementById('adminPanel').classList.add('hidden')
+        document.getElementById('showManagerPanelBtn')?.addEventListener('click', () => {
+            document.getElementById('managerPanel')?.classList.toggle('hidden')
+            document.getElementById('adminPanel')?.classList.add('hidden')
         })
-        document.getElementById('showAdminPanelBtn').addEventListener('click', () => {
-            document.getElementById('adminPanel').classList.toggle('hidden')
-            document.getElementById('managerPanel').classList.add('hidden')
+        document.getElementById('showAdminPanelBtn')?.addEventListener('click', () => {
+            document.getElementById('adminPanel')?.classList.toggle('hidden')
+            document.getElementById('managerPanel')?.classList.add('hidden')
         })
 
-        document.getElementById('managerLoginBtn').addEventListener('click', () => this.loginAsRole('manager'))
-        document.getElementById('adminLoginBtn').addEventListener('click', () => this.loginAsRole('admin'))
+        document.getElementById('managerLoginBtn')?.addEventListener('click', () => this.loginAsRole('manager'))
+        document.getElementById('adminLoginBtn')?.addEventListener('click', () => this.loginAsRole('admin'))
 
         document.querySelectorAll('.sidebar-link').forEach(link => {
             link.addEventListener('click', e => {
                 e.preventDefault()
-                this.navigateTo(link.dataset.section)
+                if (link.dataset.section) this.navigateTo(link.dataset.section)
             })
         })
 
-        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.toggle('hidden')
+        document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+            document.getElementById('sidebar')?.classList.toggle('hidden')
         })
 
-        document.getElementById('addVehicleBtn').addEventListener('click', () => this.openVehicleModal())
-        document.getElementById('addMaintenanceBtn').addEventListener('click', () => this.openMaintenanceModal())
-        document.getElementById('addInsuranceBtn').addEventListener('click', () => this.openInsuranceModal())
+        document.getElementById('addVehicleBtn')?.addEventListener('click', () => this.openVehicleModal())
+        document.getElementById('addMaintenanceBtn')?.addEventListener('click', () => this.openMaintenanceModal())
+        document.getElementById('addInsuranceBtn')?.addEventListener('click', () => this.openInsuranceModal())
 
         document.querySelectorAll('.closeModal').forEach(btn => {
             btn.addEventListener('click', () => this.closeAllModals())
         })
 
-        document.getElementById('vehicleForm').addEventListener('submit', e => this.saveVehicle(e))
-        document.getElementById('maintenanceForm').addEventListener('submit', e => this.saveMaintenance(e))
-        document.getElementById('insuranceForm').addEventListener('submit', e => this.saveInsurance(e))
+        document.getElementById('vehicleForm')?.addEventListener('submit', e => this.saveVehicle(e))
+        document.getElementById('maintenanceForm')?.addEventListener('submit', e => this.saveMaintenance(e))
+        document.getElementById('insuranceForm')?.addEventListener('submit', e => this.saveInsurance(e))
 
-        document.getElementById('estado').addEventListener('change', e => {
+        document.getElementById('estado')?.addEventListener('change', e => {
             const isInactive = e.target.value !== 'activo'
-            document.getElementById('fechaBajaContainer').classList.toggle('hidden', !isInactive)
-            document.getElementById('motivoBajaContainer').classList.toggle('hidden', !isInactive)
+            document.getElementById('fechaBajaContainer')?.classList.toggle('hidden', !isInactive)
+            document.getElementById('motivoBajaContainer')?.classList.toggle('hidden', !isInactive)
         })
 
-        document.getElementById('searchVehicle').addEventListener('input', () => this.renderVehicles())
-        document.getElementById('filterType').addEventListener('change', () => this.renderVehicles())
-        document.getElementById('filterStatus').addEventListener('change', () => this.renderVehicles())
-        document.getElementById('managerUserFilter').addEventListener('change', () => this.renderManagerSection())
+        document.getElementById('searchVehicle')?.addEventListener('input', () => this.renderVehicles())
+        document.getElementById('filterType')?.addEventListener('change', () => this.renderVehicles())
+        document.getElementById('filterStatus')?.addEventListener('change', () => this.renderVehicles())
+        document.getElementById('managerUserFilter')?.addEventListener('change', () => this.renderManagerSection())
 
-        document.getElementById('vehiclesTableBody').addEventListener('click', e => {
+        document.getElementById('vehiclesTableBody')?.addEventListener('click', e => {
             const btn = e.target.closest('button[data-action]')
             if (!btn) return
             const id = Number(btn.dataset.id)
@@ -549,7 +558,7 @@ const FleetPro = {
             if (btn.dataset.action === 'delete-vehicle') this.deleteVehicle(id)
         })
 
-        document.getElementById('maintenanceTableBody').addEventListener('click', e => {
+        document.getElementById('maintenanceTableBody')?.addEventListener('click', e => {
             const btn = e.target.closest('button[data-action]')
             if (!btn) return
             const id = Number(btn.dataset.id)
@@ -557,7 +566,7 @@ const FleetPro = {
             if (btn.dataset.action === 'delete-maintenance') this.deleteMaintenance(id)
         })
 
-        document.getElementById('insuranceTableBody').addEventListener('click', e => {
+        document.getElementById('insuranceTableBody')?.addEventListener('click', e => {
             const btn = e.target.closest('button[data-action]')
             if (!btn) return
             const id = Number(btn.dataset.id)
@@ -565,15 +574,14 @@ const FleetPro = {
             if (btn.dataset.action === 'delete-insurance') this.deleteInsurance(id)
         })
 
-        document.getElementById('prevMonth').addEventListener('click', () => this.changeMonth(-1))
-        document.getElementById('nextMonth').addEventListener('click', () => this.changeMonth(1))
-        document.getElementById('exportReportBtn').addEventListener('click', () => this.exportReport())
-        document.getElementById('descargarBaseDatos').addEventListener('click', descargarBaseDatos)
-        document.getElementById('descargarReportesPDF').addEventListener('click', descargarReportesPDF)
+        document.getElementById('prevMonth')?.addEventListener('click', () => this.changeMonth(-1))
+        document.getElementById('nextMonth')?.addEventListener('click', () => this.changeMonth(1))
+        document.getElementById('descargarBaseDatos')?.addEventListener('click', descargarBaseDatos)
+        document.getElementById('descargarReportesPDF')?.addEventListener('click', descargarReportesPDF)
 
-        document.getElementById('blockBtn').addEventListener('click', () => this.setBlockState(true))
-        document.getElementById('unblockBtn').addEventListener('click', () => this.setBlockState(false))
-        document.getElementById('logoutBtn').addEventListener('click', () => this.logout())
+        document.getElementById('blockBtn')?.addEventListener('click', () => this.setBlockState(true))
+        document.getElementById('unblockBtn')?.addEventListener('click', () => this.setBlockState(false))
+        document.getElementById('logoutBtn')?.addEventListener('click', () => this.logout())
     },
 
     async loginAsRole(role) {
@@ -586,9 +594,12 @@ const FleetPro = {
 
     navigateTo(section) {
         document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'))
-        document.querySelector(`[data-section="${section}"]`).classList.add('active')
+        document.querySelector(`[data-section="${section}"]`)?.classList.add('active')
         document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'))
-        document.getElementById(`${section}-section`).classList.remove('hidden')
+        
+        const targetSection = document.getElementById(`${section}-section`)
+        if (!targetSection) return;
+        targetSection.classList.remove('hidden')
 
         const titles = {
             dashboard: 'Inicio',
@@ -1101,11 +1112,15 @@ const FleetPro = {
         }
 
         const users = this.getManagerUsers()
-        document.getElementById('managerUsersCount').textContent = users.length.toString()
-        document.getElementById('managerTotalRecords').textContent = activities.length.toString()
+        const usersCountEl = document.getElementById('managerUsersCount')
+        const totalRecordsEl = document.getElementById('managerTotalRecords')
+        const maintAlertEl = document.getElementById('managerMaintenanceAlert')
+        
+        if (usersCountEl) usersCountEl.textContent = users.length.toString()
+        if (totalRecordsEl) totalRecordsEl.textContent = activities.length.toString()
         const upcoming = this.data.maintenances.filter(m => m.proximaFecha && new Date(m.proximaFecha) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).length
         const overdue = this.data.maintenances.filter(m => m.proximaFecha && new Date(m.proximaFecha) < new Date()).length
-        document.getElementById('managerMaintenanceAlert').textContent = `${upcoming}/${overdue}`
+        if (maintAlertEl) maintAlertEl.textContent = `${upcoming}/${overdue}`
     },
 
     renderVehicles() {
