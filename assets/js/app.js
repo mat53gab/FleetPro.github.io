@@ -38,7 +38,7 @@ async function login() {
     let password = document.getElementById('loginPassword').value
 
     if (!identifier || !password) {
-        alert('Ingresa tu correo electrónico o usuario y contraseña')
+        alert('Por favor, ingresa tu correo electrónico o usuario y la contraseña')
         return
     }
 
