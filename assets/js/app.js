@@ -498,90 +498,100 @@ const FleetPro = {
     },
 
     setupEventListeners() {
-        // Usamos ?. para que si el elemento no existe en el HTML, el código no se rompa
-        document.getElementById('loginTab')?.addEventListener('click', showLogin)
-        document.getElementById('registerTab')?.addEventListener('click', showRegister)
-        document.getElementById('loginBtn')?.addEventListener('click', login)
-        document.getElementById('registerBtn')?.addEventListener('click', register)
+        try {
+            // Función de escucha ultra-segura
+            const listen = (id, event, fn) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener(event, fn);
+                } else {
+                    console.warn(`[DOM] No se encontró el elemento con ID: ${id}. El evento ${event} no fue asignado.`);
+                }
+            };
 
-        document.getElementById('showManagerPanelBtn')?.addEventListener('click', () => {
-            document.getElementById('managerPanel')?.classList.toggle('hidden')
-            document.getElementById('adminPanel')?.classList.add('hidden')
-        })
-        document.getElementById('showAdminPanelBtn')?.addEventListener('click', () => {
-            document.getElementById('adminPanel')?.classList.toggle('hidden')
-            document.getElementById('managerPanel')?.classList.add('hidden')
-        })
+            // 1. AUTH - Prioridad máxima
+            listen('loginTab', 'click', showLogin);
+            listen('registerTab', 'click', showRegister);
+            listen('loginBtn', 'click', (e) => {
+                console.log("[AUTH] Click en botón de login detectado");
+                login(e);
+            });
+            listen('registerBtn', 'click', register);
+            listen('logoutBtn', 'click', () => this.logout());
 
-        document.getElementById('managerLoginBtn')?.addEventListener('click', () => this.loginAsRole('manager'))
-        document.getElementById('adminLoginBtn')?.addEventListener('click', () => this.loginAsRole('admin'))
+            // 2. PANELES ESPECIALES
+            listen('showManagerPanelBtn', 'click', () => {
+                document.getElementById('managerPanel')?.classList.toggle('hidden');
+                document.getElementById('adminPanel')?.classList.add('hidden');
+            });
+            listen('showAdminPanelBtn', 'click', () => {
+                document.getElementById('adminPanel')?.classList.toggle('hidden');
+                document.getElementById('managerPanel')?.classList.add('hidden');
+            });
+            listen('managerLoginBtn', 'click', () => this.loginAsRole('manager'));
+            listen('adminLoginBtn', 'click', () => this.loginAsRole('admin'));
 
-        document.querySelectorAll('.sidebar-link').forEach(link => {
-            link.addEventListener('click', e => {
-                e.preventDefault()
-                if (link.dataset.section) this.navigateTo(link.dataset.section)
-            })
-        })
+            // 3. NAVEGACIÓN Y UI GENERAL
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.addEventListener('click', e => {
+                    e.preventDefault();
+                    if (link.dataset.section) this.navigateTo(link.dataset.section);
+                });
+            });
 
-        document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
-            document.getElementById('sidebar')?.classList.toggle('hidden')
-        })
+            listen('mobileMenuBtn', 'click', () => document.getElementById('sidebar')?.classList.toggle('hidden'));
+            document.querySelectorAll('.closeModal').forEach(btn => btn.addEventListener('click', () => this.closeAllModals()));
 
-        document.getElementById('addVehicleBtn')?.addEventListener('click', () => this.openVehicleModal())
-        document.getElementById('addMaintenanceBtn')?.addEventListener('click', () => this.openMaintenanceModal())
-        document.getElementById('addInsuranceBtn')?.addEventListener('click', () => this.openInsuranceModal())
+            // 4. FORMULARIOS Y ACCIONES
+            listen('addVehicleBtn', 'click', () => this.openVehicleModal());
+            listen('addMaintenanceBtn', 'click', () => this.openMaintenanceModal());
+            listen('addInsuranceBtn', 'click', () => this.openInsuranceModal());
 
-        document.querySelectorAll('.closeModal').forEach(btn => {
-            btn.addEventListener('click', () => this.closeAllModals())
-        })
+            listen('vehicleForm', 'submit', e => this.saveVehicle(e));
+            listen('maintenanceForm', 'submit', e => this.saveMaintenance(e));
+            listen('insuranceForm', 'submit', e => this.saveInsurance(e));
 
-        document.getElementById('vehicleForm')?.addEventListener('submit', e => this.saveVehicle(e))
-        document.getElementById('maintenanceForm')?.addEventListener('submit', e => this.saveMaintenance(e))
-        document.getElementById('insuranceForm')?.addEventListener('submit', e => this.saveInsurance(e))
+            listen('estado', 'change', e => {
+                const isInactive = e.target.value !== 'activo';
+                document.getElementById('fechaBajaContainer')?.classList.toggle('hidden', !isInactive);
+                document.getElementById('motivoBajaContainer')?.classList.toggle('hidden', !isInactive);
+            });
 
-        document.getElementById('estado')?.addEventListener('change', e => {
-            const isInactive = e.target.value !== 'activo'
-            document.getElementById('fechaBajaContainer')?.classList.toggle('hidden', !isInactive)
-            document.getElementById('motivoBajaContainer')?.classList.toggle('hidden', !isInactive)
-        })
+            // 5. FILTROS Y TABLAS
+            listen('searchVehicle', 'input', () => this.renderVehicles());
+            listen('filterType', 'change', () => this.renderVehicles());
+            listen('filterStatus', 'change', () => this.renderVehicles());
+            listen('managerUserFilter', 'change', () => this.renderManagerSection());
 
-        document.getElementById('searchVehicle')?.addEventListener('input', () => this.renderVehicles())
-        document.getElementById('filterType')?.addEventListener('change', () => this.renderVehicles())
-        document.getElementById('filterStatus')?.addEventListener('change', () => this.renderVehicles())
-        document.getElementById('managerUserFilter')?.addEventListener('change', () => this.renderManagerSection())
+            ['vehiclesTableBody', 'maintenanceTableBody', 'insuranceTableBody'].forEach(tableId => {
+                const table = document.getElementById(tableId);
+                if (table) {
+                    table.addEventListener('click', e => {
+                        const btn = e.target.closest('button[data-action]');
+                        if (!btn) return;
+                        const id = Number(btn.dataset.id);
+                        const action = btn.dataset.action;
+                        if (action === 'edit-vehicle') this.openVehicleModal(this.getVehicleById(id));
+                        if (action === 'delete-vehicle') this.deleteVehicle(id);
+                        if (action === 'edit-maintenance') this.openMaintenanceModal(this.getMaintenanceById(id));
+                        if (action === 'delete-maintenance') this.deleteMaintenance(id);
+                        if (action === 'edit-insurance') this.openInsuranceModal(this.getInsuranceById(id));
+                        if (action === 'delete-insurance') this.deleteInsurance(id);
+                    });
+                }
+            });
 
-        document.getElementById('vehiclesTableBody')?.addEventListener('click', e => {
-            const btn = e.target.closest('button[data-action]')
-            if (!btn) return
-            const id = Number(btn.dataset.id)
-            if (btn.dataset.action === 'edit-vehicle') this.openVehicleModal(this.getVehicleById(id))
-            if (btn.dataset.action === 'delete-vehicle') this.deleteVehicle(id)
-        })
+            // 6. CALENDARIO Y DESCARGAS
+            listen('prevMonth', 'click', () => this.changeMonth(-1));
+            listen('nextMonth', 'click', () => this.changeMonth(1));
+            listen('descargarBaseDatos', 'click', descargarBaseDatos);
+            listen('descargarReportesPDF', 'click', descargarReportesPDF);
+            listen('blockBtn', 'click', () => this.setBlockState(true));
+            listen('unblockBtn', 'click', () => this.setBlockState(false));
 
-        document.getElementById('maintenanceTableBody')?.addEventListener('click', e => {
-            const btn = e.target.closest('button[data-action]')
-            if (!btn) return
-            const id = Number(btn.dataset.id)
-            if (btn.dataset.action === 'edit-maintenance') this.openMaintenanceModal(this.getMaintenanceById(id))
-            if (btn.dataset.action === 'delete-maintenance') this.deleteMaintenance(id)
-        })
-
-        document.getElementById('insuranceTableBody')?.addEventListener('click', e => {
-            const btn = e.target.closest('button[data-action]')
-            if (!btn) return
-            const id = Number(btn.dataset.id)
-            if (btn.dataset.action === 'edit-insurance') this.openInsuranceModal(this.getInsuranceById(id))
-            if (btn.dataset.action === 'delete-insurance') this.deleteInsurance(id)
-        })
-
-        document.getElementById('prevMonth')?.addEventListener('click', () => this.changeMonth(-1))
-        document.getElementById('nextMonth')?.addEventListener('click', () => this.changeMonth(1))
-        document.getElementById('descargarBaseDatos')?.addEventListener('click', descargarBaseDatos)
-        document.getElementById('descargarReportesPDF')?.addEventListener('click', descargarReportesPDF)
-
-        document.getElementById('blockBtn')?.addEventListener('click', () => this.setBlockState(true))
-        document.getElementById('unblockBtn')?.addEventListener('click', () => this.setBlockState(false))
-        document.getElementById('logoutBtn')?.addEventListener('click', () => this.logout())
+        } catch (err) {
+            console.error("Error crítico en setupEventListeners:", err);
+        }
     },
 
     async loginAsRole(role) {
