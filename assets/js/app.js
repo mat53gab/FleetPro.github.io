@@ -29,41 +29,8 @@ async function getRoleFromDB(userId) {
 }
 
 function showLogin() {
-    document.getElementById('loginForm').classList.remove('hidden')
-    document.getElementById('registerForm').classList.add('hidden')
-    document.getElementById('loginTab').classList.add('active')
-    document.getElementById('registerTab').classList.remove('active')
-}
-
-function showRegister() {
-    document.getElementById('loginForm').classList.add('hidden')
-    document.getElementById('registerForm').classList.remove('hidden')
-    document.getElementById('registerTab').classList.add('active')
-    document.getElementById('loginTab').classList.remove('active')
-}
-
-async function register() {
-    if (FleetPro.isBlocked) {
-        alert('El sitio está bloqueado por falta de pago. No se puede crear cuentas ahora.')
-        return
-    }
-
-    const email = document.getElementById('registerEmail').value.trim()
-    const password = document.getElementById('registerPassword').value
-
-    if (!email.includes('@')) {
-        alert('Ingresa un correo válido')
-        return
-    }
-
-    const { error } = await supabase.auth.signUp({ email, password })
-
-    if (error) {
-        alert(error.message)
-    } else {
-        alert('Cuenta creada correctamente')
-        showLogin()
-    }
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) loginForm.classList.remove('hidden');
 }
 
 async function login() {
@@ -122,7 +89,7 @@ async function login() {
 
     // Actualizamos la UI con los datos procesados
     const roleLabel = FleetPro.user.isAdmin ? 'Administrador' : FleetPro.user.isManager ? 'Gerente' : 'Usuario'
-    const avatarLabel = FleetPro.user.isAdmin ? 'AD' : FleetPro.user.isManager ? 'GE' : (user.email || 'U').slice(0, 2).toUpperCase()
+    const avatarLabel = FleetPro.user.isAdmin ? 'AD' : FleetPro.user.isManager ? 'GE' : (FleetPro.user.email || 'U').slice(0, 2).toUpperCase()
 
     document.getElementById('currentUserName').textContent = FleetPro.user.fullName
     document.getElementById('currentUserRole').textContent = roleLabel
@@ -212,7 +179,7 @@ const FleetPro = {
         if (blockBtn instanceof HTMLButtonElement) blockBtn.disabled = blocked
         if (unblockBtn instanceof HTMLButtonElement) unblockBtn.disabled = !blocked
 
-        document.querySelectorAll('#addVehicleBtn, #addMaintenanceBtn, #addInsuranceBtn, #exportReportBtn, #descargarBaseDatos, #descargarReportesPDF, #registerBtn').forEach(btn => {
+        document.querySelectorAll('#addVehicleBtn, #addMaintenanceBtn, #addInsuranceBtn, #exportReportBtn, #descargarBaseDatos, #descargarReportesPDF').forEach(btn => {
             if (btn instanceof HTMLButtonElement) btn.disabled = blocked
         })
 
@@ -550,10 +517,7 @@ const FleetPro = {
         document.getElementById('descargarBaseDatos').addEventListener('click', descargarBaseDatos)
         document.getElementById('descargarReportesPDF').addEventListener('click', descargarReportesPDF)
 
-        document.getElementById('loginTab').addEventListener('click', showLogin)
-        document.getElementById('registerTab').addEventListener('click', showRegister)
         document.getElementById('loginBtn').addEventListener('click', login)
-        document.getElementById('registerBtn').addEventListener('click', register)
         document.getElementById('blockBtn').addEventListener('click', () => this.setBlockState(true))
         document.getElementById('unblockBtn').addEventListener('click', () => this.setBlockState(false))
         document.getElementById('logoutBtn').addEventListener('click', () => this.logout())

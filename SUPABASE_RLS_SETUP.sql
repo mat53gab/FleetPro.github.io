@@ -55,10 +55,11 @@
   DROP POLICY IF EXISTS "Profiles: admin puede ver todos los perfiles" ON public.profiles;
   DROP POLICY IF EXISTS "Profiles: usuario puede crear su propio perfil" ON public.profiles;
 
-  -- Permite que cualquier usuario autenticado vea su propio perfil
-  CREATE POLICY "Profiles: ver perfil propio" 
+  -- Permite que cualquier usuario autenticado vea su propio perfil y que administradores vean todos
+  DROP POLICY IF EXISTS "Profiles: ver perfil propio" ON public.profiles;
+  CREATE POLICY "Profiles: ver perfiles" 
   ON public.profiles FOR SELECT 
-  USING (auth.uid() = id);
+  USING (auth.uid() = id OR public.has_role(ARRAY['admin', 'manager']));
 
   -- Permite búsqueda de email por username (necesario para el login por username)
   -- Solo permite ver columnas básicas para no exponer datos sensibles
@@ -86,6 +87,15 @@
   GRANT USAGE ON SCHEMA public TO anon, authenticated;
   GRANT ALL ON TABLE public.profiles TO postgres, service_role;
   GRANT SELECT ON TABLE public.profiles TO authenticated;
+
+  -- ==========================================
+  -- COMANDO PARA ASIGNARTE EL ROL (REMPLAZA EL EMAIL)
+  -- ==========================================
+  -- Cambia 'tu-correo@ejemplo.com' por tu email real antes de darle RUN
+  
+  UPDATE public.profiles 
+  SET role = 'admin' 
+  WHERE email = 'tu-correo@ejemplo.com';
 
   -- ==========================================
   -- COMANDO PARA DARTE ACCESO (REMPLAZA EL EMAIL)

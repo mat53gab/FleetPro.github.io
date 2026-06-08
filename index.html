@@ -13,55 +13,14 @@
     <div class="fleetpro-auth">
         <h2>FleetPro</h2>
         <p>Gestión profesional de flotas</p>
-
-        <div class="tabs">
-            <button id="loginTab" class="tab active">Iniciar Sesión</button>
-            <button id="registerTab" class="tab">Registrarse</button>
-        </div>
+        <br>
+        <h3 class="text-lg font-bold text-slate-700">Iniciar Sesión</h3>
 
         <!-- LOGIN -->
         <div id="loginForm">
-            <input type="text" id="loginEmail" placeholder="Correo electrónico o usuario">
+            <input type="text" id="loginEmail" placeholder="Correo electrónico">
             <input type="password" id="loginPassword" placeholder="Contraseña">
             <button id="loginBtn">Iniciar sesión</button>
-            <button type="button" id="showManagerPanelBtn" class="mt-2 text-xs text-slate-500 hover:text-slate-800 underline">Mostrar panel de gerente</button>
-            <button type="button" id="showAdminPanelBtn" class="mt-2 text-xs text-slate-500 hover:text-slate-800 underline">Mostrar panel de administrador</button>
-            <div id="managerPanel" class="hidden p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-sm mt-4">
-                <strong>Gerente</strong><br>
-                <div class="mt-4 space-y-3">
-                    <input type="text" id="managerUsername" placeholder="Usuario gerente" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <input type="password" id="managerPassword" placeholder="Contraseña gerente" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <button id="managerLoginBtn" class="w-full bg-amber-900 text-white rounded-lg px-4 py-2 hover:bg-amber-800">Entrar como gerente</button>
-                </div>
-            </div>
-            <div id="adminPanel" class="hidden p-4 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm mt-4">
-                <strong>Administrador</strong><br>
-                <div class="mt-4 space-y-3">
-                    <input type="text" id="adminUsername" placeholder="Usuario administrador" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <input type="password" id="adminPassword" placeholder="Contraseña administrador" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <button id="adminLoginBtn" class="w-full bg-slate-900 text-white rounded-lg px-4 py-2 hover:bg-slate-800">Entrar como administrador</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- REGISTER -->
-        <div id="registerForm" class="hidden">
-            <input type="email" id="registerEmail" placeholder="Correo electrónico">
-            <input type="password" id="registerPassword" placeholder="Contraseña">
-            <small>
-                Recomendamos usar una contraseña segura:
-                <br>
-                • mínimo 8 caracteres
-                <br>
-                • una letra mayúscula
-                <br>
-                • un número
-                <br>
-                • un símbolo especial
-                <br>
-                Puedes usar una contraseña simple si lo prefieres.
-            </small>
-            <button id="registerBtn">Crear cuenta</button>
         </div>
     </div>
 
