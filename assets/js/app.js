@@ -132,6 +132,16 @@ const FleetPro = {
         this.applyBlockState()
     },
 
+    // Funciones de seguridad para evitar que el código se rompa
+    safeSetText(id, text) {
+        const el = document.getElementById(id)
+        if (el) el.textContent = text
+    },
+    safeAddEventListener(id, event, callback) {
+        const el = document.getElementById(id)
+        if (el) el.addEventListener(event, callback)
+    },
+
     async saveBlockState() {
         const { error } = await supabase
             .from('app_state')
@@ -444,6 +454,9 @@ const FleetPro = {
     },
 
     setupEventListeners() {
+        // Prioridad: Activar el botón de login primero
+        this.safeAddEventListener('loginBtn', 'click', login)
+
         document.querySelectorAll('.sidebar-link').forEach(link => {
             link.addEventListener('click', e => {
                 e.preventDefault()
@@ -451,37 +464,35 @@ const FleetPro = {
             })
         })
 
-        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+        this.safeAddEventListener('mobileMenuBtn', 'click', () => {
             document.getElementById('sidebar').classList.toggle('hidden')
         })
 
-        document.getElementById('addVehicleBtn').addEventListener('click', () => this.openVehicleModal())
-        document.getElementById('addMaintenanceBtn').addEventListener('click', () => this.openMaintenanceModal())
-        document.getElementById('addInsuranceBtn').addEventListener('click', () => this.openInsuranceModal())
+        this.safeAddEventListener('addVehicleBtn', 'click', () => this.openVehicleModal())
+        this.safeAddEventListener('addMaintenanceBtn', 'click', () => this.openMaintenanceModal())
+        this.safeAddEventListener('addInsuranceBtn', 'click', () => this.openInsuranceModal())
 
         document.querySelectorAll('.closeModal').forEach(btn => {
             btn.addEventListener('click', () => this.closeAllModals())
         })
 
-        document.getElementById('vehicleForm').addEventListener('submit', e => this.saveVehicle(e))
-        document.getElementById('maintenanceForm').addEventListener('submit', e => this.saveMaintenance(e))
-        document.getElementById('insuranceForm').addEventListener('submit', e => this.saveInsurance(e))
+        this.safeAddEventListener('vehicleForm', 'submit', e => this.saveVehicle(e))
+        this.safeAddEventListener('maintenanceForm', 'submit', e => this.saveMaintenance(e))
+        this.safeAddEventListener('insuranceForm', 'submit', e => this.saveInsurance(e))
 
-        document.getElementById('estado').addEventListener('change', e => {
+        this.safeAddEventListener('estado', 'change', e => {
             const isInactive = e.target.value !== 'activo'
             document.getElementById('fechaBajaContainer').classList.toggle('hidden', !isInactive)
             document.getElementById('motivoBajaContainer').classList.toggle('hidden', !isInactive)
         })
 
-        document.getElementById('searchVehicle').addEventListener('input', () => this.renderVehicles())
-        document.getElementById('filterType').addEventListener('change', () => this.renderVehicles())
-        document.getElementById('filterStatus').addEventListener('change', () => this.renderVehicles())
-        const managerFilter = document.getElementById('managerUserFilter')
-        if (managerFilter) {
-            managerFilter.addEventListener('change', () => this.renderManagerSection())
-        }
+        this.safeAddEventListener('searchVehicle', 'input', () => this.renderVehicles())
+        this.safeAddEventListener('filterType', 'change', () => this.renderVehicles())
+        this.safeAddEventListener('filterStatus', 'change', () => this.renderVehicles())
+        this.safeAddEventListener('managerUserFilter', 'change', () => this.renderManagerSection())
 
-        document.getElementById('vehiclesTableBody').addEventListener('click', e => {
+        const vehiclesTable = document.getElementById('vehiclesTableBody')
+        if (vehiclesTable) vehiclesTable.addEventListener('click', e => {
             const btn = e.target.closest('button[data-action]')
             if (!btn) return
             const id = Number(btn.dataset.id)
@@ -489,7 +500,8 @@ const FleetPro = {
             if (btn.dataset.action === 'delete-vehicle') this.deleteVehicle(id)
         })
 
-        document.getElementById('maintenanceTableBody').addEventListener('click', e => {
+        const maintenanceTable = document.getElementById('maintenanceTableBody')
+        if (maintenanceTable) maintenanceTable.addEventListener('click', e => {
             const btn = e.target.closest('button[data-action]')
             if (!btn) return
             const id = Number(btn.dataset.id)
@@ -497,7 +509,8 @@ const FleetPro = {
             if (btn.dataset.action === 'delete-maintenance') this.deleteMaintenance(id)
         })
 
-        document.getElementById('insuranceTableBody').addEventListener('click', e => {
+        const insuranceTable = document.getElementById('insuranceTableBody')
+        if (insuranceTable) insuranceTable.addEventListener('click', e => {
             const btn = e.target.closest('button[data-action]')
             if (!btn) return
             const id = Number(btn.dataset.id)
@@ -505,16 +518,15 @@ const FleetPro = {
             if (btn.dataset.action === 'delete-insurance') this.deleteInsurance(id)
         })
 
-        document.getElementById('prevMonth').addEventListener('click', () => this.changeMonth(-1))
-        document.getElementById('nextMonth').addEventListener('click', () => this.changeMonth(1))
-        document.getElementById('exportReportBtn').addEventListener('click', () => this.exportReport())
-        document.getElementById('descargarBaseDatos').addEventListener('click', descargarBaseDatos)
-        document.getElementById('descargarReportesPDF').addEventListener('click', descargarReportesPDF)
+        this.safeAddEventListener('prevMonth', 'click', () => this.changeMonth(-1))
+        this.safeAddEventListener('nextMonth', 'click', () => this.changeMonth(1))
+        this.safeAddEventListener('exportReportBtn', 'click', () => this.exportReport())
+        this.safeAddEventListener('descargarBaseDatos', 'click', descargarBaseDatos)
+        this.safeAddEventListener('descargarReportesPDF', 'click', descargarReportesPDF)
 
-        document.getElementById('loginBtn').addEventListener('click', login)
-        document.getElementById('blockBtn').addEventListener('click', () => this.setBlockState(true))
-        document.getElementById('unblockBtn').addEventListener('click', () => this.setBlockState(false))
-        document.getElementById('logoutBtn').addEventListener('click', () => this.logout())
+        this.safeAddEventListener('blockBtn', 'click', () => this.setBlockState(true))
+        this.safeAddEventListener('unblockBtn', 'click', () => this.setBlockState(false))
+        this.safeAddEventListener('logoutBtn', 'click', () => this.logout())
     },
 
     navigateTo(section) {
@@ -1034,11 +1046,11 @@ const FleetPro = {
         }
 
         const users = this.getManagerUsers()
-        document.getElementById('managerUsersCount').textContent = users.length.toString()
-        document.getElementById('managerTotalRecords').textContent = activities.length.toString()
+        this.safeSetText('managerUsersCount', users.length.toString())
+        this.safeSetText('managerTotalRecords', activities.length.toString())
         const upcoming = this.data.maintenances.filter(m => m.proximaFecha && new Date(m.proximaFecha) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).length
         const overdue = this.data.maintenances.filter(m => m.proximaFecha && new Date(m.proximaFecha) < new Date()).length
-        document.getElementById('managerMaintenanceAlert').textContent = `${upcoming}/${overdue}`
+        this.safeSetText('managerMaintenanceAlert', `${upcoming}/${overdue}`)
     },
 
     renderVehicles() {
@@ -1413,9 +1425,9 @@ const FleetPro = {
         const totalValue = this.data.vehicles.reduce((sum, v) => sum + (v.estado === 'activo' ? v.valorComercial : 0), 0)
         const availabilityRate = totalVehicles > 0 ? (statusCount.activo / totalVehicles * 100) : 0
 
-        document.getElementById('avgCostVehicle').textContent = '$' + avgCost.toLocaleString(undefined, { maximumFractionDigits: 0 })
-        document.getElementById('totalValue').textContent = '$' + totalValue.toLocaleString()
-        document.getElementById('availabilityRate').textContent = availabilityRate.toFixed(1) + '%'
+        this.safeSetText('avgCostVehicle', '$' + avgCost.toLocaleString(undefined, { maximumFractionDigits: 0 }))
+        this.safeSetText('totalValue', '$' + totalValue.toLocaleString())
+        this.safeSetText('availabilityRate', availabilityRate.toFixed(1) + '%')
     },
 
     exportReport() {
