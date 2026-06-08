@@ -28,11 +28,6 @@ async function getRoleFromDB(userId) {
     }
 }
 
-function showLogin() {
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) loginForm.classList.remove('hidden');
-}
-
 async function login() {
     let identifier = document.getElementById('loginEmail').value.trim()
     let password = document.getElementById('loginPassword').value
