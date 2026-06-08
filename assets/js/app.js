@@ -594,9 +594,11 @@ const FleetPro = {
 
     navigateTo(section) {
         document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'))
-        document.querySelector(`[data-section="${section}"]`)?.classList.add('active')
+        const activeLink = document.querySelector(`[data-section="${section}"]`)
+        if (activeLink) activeLink.classList.add('active')
+
         document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'))
-        
+
         const targetSection = document.getElementById(`${section}-section`)
         if (!targetSection) return;
         targetSection.classList.remove('hidden')
@@ -610,7 +612,8 @@ const FleetPro = {
             reports: 'Reportes',
             downloads: 'Descargas'
         }
-        document.getElementById('pageTitle').textContent = titles[section]
+        const titleEl = document.getElementById('pageTitle')
+        if (titleEl) titleEl.textContent = titles[section] || 'FleetPro'
 
         if (section === 'calendar') this.renderCalendar()
         if (section === 'reports') this.updateCharts()
@@ -619,11 +622,11 @@ const FleetPro = {
 
     populateSelects() {
         const tipoSelect = document.getElementById('tipo')
-        const filterType = document.getElementById('filterType')
+        const filterTypeSelect = document.getElementById('filterType')
 
         this.data.vehicleTypes.forEach(type => {
-            tipoSelect.innerHTML += `<option value="${type}">${type}</option>`
-            filterType.innerHTML += `<option value="${type}">${type}</option>`
+            if (tipoSelect) tipoSelect.innerHTML += `<option value="${type}">${type}</option>`
+            if (filterTypeSelect) filterTypeSelect.innerHTML += `<option value="${type}">${type}</option>`
         })
     },
 
@@ -1313,7 +1316,8 @@ const FleetPro = {
 
     updateDashboard() {
         const activeVehicles = this.data.vehicles.filter(v => v.estado === 'activo')
-        document.getElementById('totalVehicles').textContent = activeVehicles.length
+        const totalVehiclesEl = document.getElementById('totalVehicles')
+        if (totalVehiclesEl) totalVehiclesEl.textContent = activeVehicles.length
 
         const today = new Date()
         const thirtyDaysLater = new Date(today)
@@ -1351,8 +1355,11 @@ const FleetPro = {
             }
         })
 
-        document.getElementById('overdueMaint').textContent = overdue
-        document.getElementById('upcomingMaint').textContent = upcoming
+        const overdueEl = document.getElementById('overdueMaint')
+        const upcomingEl = document.getElementById('upcomingMaint')
+        
+        if (overdueEl) overdueEl.textContent = overdue
+        if (upcomingEl) upcomingEl.textContent = upcoming
 
         const currentMonth = new Date().getMonth()
         const currentYear = new Date().getFullYear()
@@ -1363,15 +1370,20 @@ const FleetPro = {
             })
             .reduce((sum, m) => sum + m.costo, 0)
 
-        document.getElementById('monthlyExpenses').textContent = '$' + monthlyExpenses.toLocaleString()
+        const monthlyExpensesEl = document.getElementById('monthlyExpenses')
+        if (monthlyExpensesEl) monthlyExpensesEl.textContent = '$' + monthlyExpenses.toLocaleString()
 
         const alertsList = document.getElementById('alertsList')
+        const alertCountEl = document.getElementById('alertCount')
+
         if (alerts.length === 0) {
-            alertsList.innerHTML = '<p class="text-slate-500 text-center py-8">No hay alertas críticas en este momento</p>'
-            document.getElementById('alertCount').classList.add('hidden')
-        } else {
-            document.getElementById('alertCount').textContent = alerts.length
-            document.getElementById('alertCount').classList.remove('hidden')
+            if (alertsList) alertsList.innerHTML = '<p class="text-slate-500 text-center py-8">No hay alertas críticas en este momento</p>'
+            if (alertCountEl) alertCountEl.classList.add('hidden')
+        } else if (alertsList) {
+            if (alertCountEl) {
+                alertCountEl.textContent = alerts.length
+                alertCountEl.classList.remove('hidden')
+            }
             alertsList.innerHTML = alerts.slice(0, 5).map(a => `
                 <div class="flex items-start gap-3 p-3 bg-${a.type === 'insurance' ? 'amber' : 'red'}-50 border border-${a.type === 'insurance' ? 'amber' : 'red'}-200 rounded-lg">
                     <i class="fas fa-${a.type === 'insurance' ? 'shield-alt' : 'exclamation-circle'} text-${a.type === 'insurance' ? 'amber' : 'red'}-600 mt-0.5"></i>
@@ -1393,6 +1405,8 @@ const FleetPro = {
         })
 
         const typeCanvas = document.getElementById('vehicleTypeChart')
+        if (!typeCanvas) return // Si no hay canvas, no intentamos dibujar nada
+
         if (this.charts?.vehicleType) this.charts.vehicleType.destroy()
         this.charts = this.charts || {}
         this.charts.vehicleType = new Chart(typeCanvas, {
@@ -1421,6 +1435,8 @@ const FleetPro = {
         })
 
         const expenseCanvas = document.getElementById('expensesChart')
+        if (!expenseCanvas) return
+
         if (this.charts?.expenses) this.charts.expenses.destroy()
         this.charts.expenses = new Chart(expenseCanvas, {
             type: 'bar',
@@ -1495,9 +1511,14 @@ const FleetPro = {
         const totalValue = this.data.vehicles.reduce((sum, v) => sum + (v.estado === 'activo' ? v.valorComercial : 0), 0)
         const availabilityRate = totalVehicles > 0 ? (statusCount.activo / totalVehicles * 100) : 0
 
-        document.getElementById('avgCostVehicle').textContent = '$' + avgCost.toLocaleString(undefined, { maximumFractionDigits: 0 })
-        document.getElementById('totalValue').textContent = '$' + totalValue.toLocaleString()
-        document.getElementById('availabilityRate').textContent = availabilityRate.toFixed(1) + '%'
+        // Estos elementos no existen en tu HTML actual, así que los protegemos con if()
+        const avgCostEl = document.getElementById('avgCostVehicle')
+        const totalValueEl = document.getElementById('totalValue')
+        const availRateEl = document.getElementById('availabilityRate')
+
+        if (avgCostEl) avgCostEl.textContent = '$' + avgCost.toLocaleString(undefined, { maximumFractionDigits: 0 })
+        if (totalValueEl) totalValueEl.textContent = '$' + totalValue.toLocaleString()
+        if (availRateEl) availRateEl.textContent = availabilityRate.toFixed(1) + '%'
     },
 
     exportReport() {
