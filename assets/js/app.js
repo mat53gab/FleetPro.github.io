@@ -1280,12 +1280,12 @@ const FleetPro = {
 
         // 1. Cabeceras (Dom, Lun...)
         ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'].forEach(dayName => {
-            html += `<div class="text-center font-bold text-slate-500 text-[10px] py-2 bg-slate-50 uppercase border-b border-slate-200">${dayName}</div>`
+            html += `<div class="text-center font-bold text-slate-500 text-[10px] py-3 bg-slate-50 uppercase border-b border-slate-200">${dayName}</div>`
         })
 
         // 2. Espacios en blanco mes anterior
         for (let i = 0; i < firstDay; i++) {
-            html += '<div class="bg-slate-50/50 min-h-[100px] border border-slate-100"></div>'
+            html += '<div class="bg-slate-50/50 min-h-[100px]"></div>'
         }
 
         // Días del mes actual
@@ -1305,7 +1305,7 @@ const FleetPro = {
             const isToday = this.formatDate(new Date()) === dateStr
             
             html += `
-                <div class="calendar-day bg-white p-2 border border-slate-200 relative ${isToday ? 'ring-2 ring-blue-500 ring-inset z-10' : ''}">
+                <div class="calendar-day bg-white p-2 relative ${isToday ? 'ring-2 ring-blue-500 ring-inset z-10' : ''}">
                     <div class="font-bold ${isToday ? 'text-blue-600' : 'text-slate-700'} text-sm mb-1">${day}</div>
                     <div class="overflow-y-auto max-h-[80px]">${maintenanceLabels}</div>
                 </div>`
