@@ -145,7 +145,8 @@ const FleetPro = {
             'Furgoneta', 'Ambulancia', 'Patrulla', 'Maquinaria Pesada',
             'Volqueta', 'Grúa', 'Vehículo Eléctrico'
         ],
-        currentMonth: new Date()
+        currentMonth: new Date(),
+        alerts: []
     },
 
     user: null,
@@ -577,6 +578,7 @@ const FleetPro = {
         listen('descargarReportesPDF', 'click', descargarReportesPDF);
         listen('blockBtn', 'click', () => this.setBlockState(true));
         listen('unblockBtn', 'click', () => this.setBlockState(false));
+        listen('alertBtn', 'click', () => this.openAlertsModal());
     },
 
     async loginAsRole(role) {
@@ -626,6 +628,33 @@ const FleetPro = {
         if (section === 'calendar') this.renderCalendar()
         if (section === 'reports') this.updateCharts()
         if (section === 'manager') this.renderManagerSection()
+    },
+
+    openAlertsModal() {
+        const modal = document.getElementById('alertsModal');
+        const content = document.getElementById('alertsModalContent');
+        if (!modal || !content) return;
+
+        if (!this.data.alerts || this.data.alerts.length === 0) {
+            content.innerHTML = '<p class="text-slate-500 text-center py-8 italic">No hay alertas críticas en este momento.</p>';
+        } else {
+            content.innerHTML = this.data.alerts.map(a => `
+                <div class="flex items-start gap-3 p-4 bg-${a.type === 'insurance' ? 'amber' : 'red'}-50 border border-${a.type === 'insurance' ? 'amber' : 'red'}-200 rounded-xl">
+                    <div class="w-10 h-10 rounded-full bg-${a.type === 'insurance' ? 'amber' : 'red'}-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-${a.type === 'insurance' ? 'shield-alt' : 'exclamation-circle'} text-${a.type === 'insurance' ? 'amber' : 'red'}-600"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <p class="font-bold text-slate-900">${this.escapeHtml(a.vehicle)}</p>
+                            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-${a.type === 'insurance' ? 'amber' : 'red'}-200 text-${a.type === 'insurance' ? 'amber' : 'red'}-800">${a.type === 'insurance' ? 'Seguro' : 'Taller'}</span>
+                        </div>
+                        <p class="text-sm text-slate-700 mt-1">${this.escapeHtml(a.message)}</p>
+                        <p class="text-xs text-slate-500 mt-1 font-medium"><i class="far fa-calendar-alt mr-1"></i>Vence: ${this.escapeHtml(this.formatDateDisplay(a.date))}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+        modal.classList.remove('hidden');
     },
 
     populateSelects() {
@@ -1368,6 +1397,8 @@ const FleetPro = {
                 }
             }
         })
+
+        this.data.alerts = alerts; // Guardamos las alertas para el modal de la campanita
 
         const overdueEl = document.getElementById('overdueMaint')
         const upcomingEl = document.getElementById('upcomingMaint')

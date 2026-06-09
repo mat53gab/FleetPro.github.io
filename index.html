@@ -598,6 +598,21 @@
         </div>
     </div>
 
+    <div id="alertsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col card-shadow-lg animate-fade-in">
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-slate-800">
+                    <i class="fas fa-bell text-blue-600"></i>
+                    <h3 class="text-lg font-bold">Notificaciones</h3>
+                </div>
+                <button class="closeModal text-slate-400 hover:text-slate-600 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div id="alertsModalContent" class="p-4 space-y-3 overflow-y-auto bg-white flex-1">
+                <!-- Las alertas se cargan dinámicamente aquí -->
+            </div>
+        </div>
+    </div>
+
     <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
     <script type="module" src="assets/js/app.js"></script>
