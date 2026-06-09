@@ -1279,15 +1279,34 @@ const FleetPro = {
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             
-            // Buscamos mantenimientos programados para este día específico
-            const maintenances = this.data.maintenances.filter(m => m.proximaFecha === dateStr);
+            // Filtramos mantenimientos para este día y que el vehículo esté activo
+            const maintenances = this.data.maintenances.filter(m => {
+                if (m.proximaFecha !== dateStr) return false;
+                const v = this.data.vehicles.find(veh => veh.id === m.vehicleId);
+                return v && v.estado === 'activo';
+            });
             
             let maintenanceLabels = '';
             maintenances.forEach(m => {
                 const vehicle = this.data.vehicles.find(v => v.id === m.vehicleId);
                 const placa = vehicle ? vehicle.placa : 'M';
+
+                // Lógica de "Notificación" por colores
+                const mDate = new Date(m.proximaFecha + 'T00:00:00');
+                const todayDate = new Date();
+                todayDate.setHours(0,0,0,0);
+
+                let colorClass = 'bg-blue-600'; // Programado (Azul)
+                if (mDate < todayDate) {
+                    colorClass = 'bg-red-600'; // ¡ALERTA! Vencido (Rojo)
+                } else if (mDate <= new Date(todayDate.getTime() + 30 * 24 * 60 * 60 * 1000)) {
+                    colorClass = 'bg-amber-500'; // ¡AVISO! Próximo (Naranja)
+                }
+
                 maintenanceLabels += `
-                    <div class="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded mt-1 truncate" title="${placa} - ${m.tipo}">
+                    <div class="${colorClass} text-white text-[9px] px-1.5 py-0.5 rounded mt-1 truncate cursor-pointer hover:opacity-80 transition-opacity" 
+                         onclick="FleetPro.openMaintenanceModal(${this.safeJson(m)})"
+                         title="${placa} - ${m.tipo}">
                         ${placa}
                     </div>`;
             });
