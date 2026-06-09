@@ -1058,6 +1058,7 @@ const FleetPro = {
         this.renderVehicles()
         this.renderMaintenances()
         this.renderInsurances()
+        this.renderCalendar()
         this.updateManagerView()
         this.renderManagerSection()
     },
@@ -1264,24 +1265,6 @@ const FleetPro = {
     renderCalendar() {
         const grid = document.getElementById('calendarGrid')
         if (!grid) return
-        
-        // Reforzamos el grid por si Tailwind no cargó
-        grid.style.display = 'grid';
-        grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
-        grid.style.gap = '8px';
-        grid.style.minHeight = '450px';
-        grid.style.visibility = 'visible';
-        grid.style.opacity = '1';
-        grid.style.cssText = `
-            display: grid !important;
-            grid-template-columns: repeat(7, 1fr) !important;
-            gap: 2px !important;
-            background-color: #e2e8f0 !important;
-            border: 2px solid #e2e8f0 !important;
-            width: 100% !important;
-            border-radius: 8px !important;
-            overflow: hidden !important;
-        `;
 
         const monthDisplay = document.getElementById('currentMonth')
         const year = this.data.currentMonth.getFullYear()
@@ -1297,12 +1280,12 @@ const FleetPro = {
 
         // 1. Cabeceras (Dom, Lun...)
         ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'].forEach(dayName => {
-            html += `<div style="text-align:center; font-weight:bold; color:#475569; font-size:11px; padding:10px; background:#f8fafc; text-transform:uppercase; border-bottom:1px solid #e2e8f0;">${dayName}</div>`
+            html += `<div class="text-center font-bold text-slate-500 text-[10px] py-2 bg-slate-50 uppercase border-b border-slate-200">${dayName}</div>`
         })
 
         // 2. Espacios en blanco mes anterior
         for (let i = 0; i < firstDay; i++) {
-            html += '<div style="background:#f8fafc; height:110px; opacity:0.5; border:1px solid #e2e8f0;"></div>'
+            html += '<div class="bg-slate-50/50 min-h-[100px] border border-slate-100"></div>'
         }
 
         // Días del mes actual
@@ -1313,17 +1296,18 @@ const FleetPro = {
             let maintenanceLabels = ''
             maintenances.forEach(m => {
                 const vehicle = this.data.vehicles.find(v => v.id === m.vehicleId)
-                maintenanceLabels += `<div style="background:#2563eb; color:white; font-size:9px; padding:2px 4px; border-radius:3px; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${vehicle ? vehicle.placa : ''}">${vehicle ? vehicle.placa : 'M'}</div>`
+                maintenanceLabels += `
+                    <div class="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded mt-1 truncate" title="${vehicle ? vehicle.placa : 'Mantenimiento'}">
+                        ${vehicle ? vehicle.placa : 'M'}
+                    </div>`
             })
 
             const isToday = this.formatDate(new Date()) === dateStr
-            const borderStyle = isToday ? '2px solid #2563eb' : '1px solid #475569'
-            const bgColor = isToday ? '#eff6ff' : '#ffffff'
             
             html += `
-                <div style="background-color:${bgColor}; min-height:120px; padding:8px; overflow-y:auto; border:1px solid #e2e8f0; position:relative; box-shadow: ${isToday ? 'inset 0 0 0 2px #2563eb' : 'none'}; border-color: ${isToday ? '#2563eb' : '#e2e8f0'};">
-                    <div style="font-weight:bold; color:${isToday ? '#2563eb' : '#1e293b'}; font-size:14px; margin-bottom:4px;">${day}</div>
-                    ${maintenanceLabels}
+                <div class="calendar-day bg-white p-2 border border-slate-200 relative ${isToday ? 'ring-2 ring-blue-500 ring-inset z-10' : ''}">
+                    <div class="font-bold ${isToday ? 'text-blue-600' : 'text-slate-700'} text-sm mb-1">${day}</div>
+                    <div class="overflow-y-auto max-h-[80px]">${maintenanceLabels}</div>
                 </div>`
         }
 
