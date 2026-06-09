@@ -20,3 +20,105 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 .animate-fade-in { animation: fadeIn 0.3s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- Estilos de Autenticación (Login/Registro) --- */
+.fleetpro-auth {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 2rem;
+}
+
+.fleetpro-auth h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.025em;
+}
+
+.fleetpro-auth p {
+    color: #94a3b8;
+    margin-bottom: 2.5rem;
+    font-size: 1.1rem;
+}
+
+.fleetpro-auth .tabs {
+    display: flex;
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.5rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: none;
+}
+
+.fleetpro-auth .tab {
+    flex: 1;
+    padding: 0.75rem;
+    color: #94a3b8;
+    font-weight: 600;
+    transition: all 0.2s;
+    border-radius: 0.5rem;
+}
+
+.fleetpro-auth .tab.active {
+    background: white;
+    color: #0f172a;
+    shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.fleetpro-auth #loginForm, 
+.fleetpro-auth #registerForm {
+    width: 100%;
+    max-width: 400px;
+    background: white;
+    padding: 2.5rem;
+    border-radius: 0 0 0.75rem 0.75rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.fleetpro-auth input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.fleetpro-auth input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    ring: 2px solid #bfdbfe;
+}
+
+.fleetpro-auth button#loginBtn,
+.fleetpro-auth button#registerBtn {
+    width: 100%;
+    padding: 0.875rem;
+    background: #2563eb;
+    color: white;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    margin-top: 0.5rem;
+    transition: background 0.2s;
+}
+
+.fleetpro-auth button#loginBtn:hover,
+.fleetpro-auth button#registerBtn:hover {
+    background: #1d4ed8;
+}
+
+.fleetpro-auth small {
+    display: block;
+    margin-bottom: 1.5rem;
+    color: #64748b;
+    line-height: 1.5;
+    font-size: 0.8rem;
+}
