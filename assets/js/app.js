@@ -1263,55 +1263,58 @@ const FleetPro = {
     },
 
     renderCalendar() {
-        const grid = document.getElementById('calendarGrid')
-        if (!grid) return
+        const grid = document.getElementById('calendarGrid');
+        if (!grid) return;
 
-        const monthDisplay = document.getElementById('currentMonth')
-        const year = this.data.currentMonth.getFullYear()
-        const month = this.data.currentMonth.getMonth()
+        const monthDisplay = document.getElementById('currentMonth');
+        const year = this.data.currentMonth.getFullYear();
+        const month = this.data.currentMonth.getMonth();
 
-        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-        if (monthDisplay) monthDisplay.textContent = `${monthNames[month]} ${year}`
+        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        if (monthDisplay) monthDisplay.textContent = `${monthNames[month]} ${year}`;
 
-        const firstDay = new Date(year, month, 1).getDay()
-        const daysInMonth = new Date(year, month + 1, 0).getDate()
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        let html = ''
+        let html = '';
 
-        // 1. Cabeceras (Dom, Lun...)
+        // 1. Cabeceras (Dom, Lun, Mar...)
         ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'].forEach(dayName => {
-            html += `<div class="text-center font-bold text-slate-500 text-[10px] py-3 bg-slate-50 uppercase border-b border-slate-200">${dayName}</div>`
-        })
+            html += `<div class="text-center font-bold text-slate-500 text-[10px] py-3 bg-slate-50 uppercase border-b border-slate-200">${dayName}</div>`;
+        });
 
-        // 2. Espacios en blanco mes anterior
+        // 2. Espacios en blanco (días del mes anterior)
         for (let i = 0; i < firstDay; i++) {
-            html += '<div class="bg-slate-50/50 min-h-[100px]"></div>'
+            html += '<div class="bg-slate-50/50 min-h-[100px]"></div>';
         }
 
-        // Días del mes actual
+        // 3. Días del mes actual
         for (let day = 1; day <= daysInMonth; day++) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-            const maintenances = this.data.maintenances.filter(m => m.proximaFecha === dateStr)
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             
-            let maintenanceLabels = ''
+            // Buscamos mantenimientos programados para este día específico
+            const maintenances = this.data.maintenances.filter(m => m.proximaFecha === dateStr);
+            
+            let maintenanceLabels = '';
             maintenances.forEach(m => {
-                const vehicle = this.data.vehicles.find(v => v.id === m.vehicleId)
+                const vehicle = this.data.vehicles.find(v => v.id === m.vehicleId);
+                const placa = vehicle ? vehicle.placa : 'M';
                 maintenanceLabels += `
-                    <div class="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded mt-1 truncate" title="${vehicle ? vehicle.placa : 'Mantenimiento'}">
-                        ${vehicle ? vehicle.placa : 'M'}
-                    </div>`
-            })
+                    <div class="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded mt-1 truncate" title="${placa} - ${m.tipo}">
+                        ${placa}
+                    </div>`;
+            });
 
-            const isToday = this.formatDate(new Date()) === dateStr
+            const isToday = this.formatDate(new Date()) === dateStr;
             
             html += `
-                <div class="calendar-day bg-white p-2 relative ${isToday ? 'ring-2 ring-blue-500 ring-inset z-10' : ''}">
+                <div class="calendar-day bg-white p-2 relative border border-transparent ${isToday ? 'ring-2 ring-blue-500 ring-inset z-10' : ''}">
                     <div class="font-bold ${isToday ? 'text-blue-600' : 'text-slate-700'} text-sm mb-1">${day}</div>
                     <div class="overflow-y-auto max-h-[80px]">${maintenanceLabels}</div>
-                </div>`
+                </div>`;
         }
 
-        grid.innerHTML = html
+        grid.innerHTML = html;
     },
 
     changeMonth(delta) {
