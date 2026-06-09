@@ -30,20 +30,6 @@ async function getRoleFromDB(userId) {
     }
 }
 
-function showLogin() {
-    document.getElementById('loginForm').classList.remove('hidden')
-    document.getElementById('registerForm').classList.add('hidden')
-    document.getElementById('loginTab').classList.add('active')
-    document.getElementById('registerTab').classList.remove('active')
-}
-
-function showRegister() {
-    document.getElementById('loginForm').classList.add('hidden')
-    document.getElementById('registerForm').classList.remove('hidden')
-    document.getElementById('registerTab').classList.add('active')
-    document.getElementById('loginTab').classList.remove('active')
-}
-
 async function register(e) {
     if (e) e.preventDefault()
     if (FleetPro.isBlocked) {
@@ -51,8 +37,8 @@ async function register(e) {
         return
     }
 
-    const email = document.getElementById('registerEmail').value.trim()
-    const password = document.getElementById('registerPassword').value
+    const email = document.getElementById('adminRegisterEmail').value.trim()
+    const password = document.getElementById('adminRegisterPassword').value
 
     if (!email.includes('@')) {
         alert('Ingresa un correo válido')
@@ -64,8 +50,11 @@ async function register(e) {
     if (error) {
         alert(error.message)
     } else {
-        alert('Cuenta creada correctamente')
-        showLogin()
+        alert('Cuenta creada correctamente. Nota: Al usar registro directo de Supabase, es posible que debas cerrar sesión y volver a entrar para recuperar tu sesión de administrador.')
+        // Limpiamos los campos del panel admin
+        document.getElementById('adminRegisterEmail').value = ''
+        document.getElementById('adminRegisterPassword').value = ''
+        if (typeof FleetPro.showToast === 'function') FleetPro.showToast('Usuario registrado con éxito', 'success')
     }
 }
 
@@ -504,10 +493,8 @@ const FleetPro = {
         };
 
         // 1. AUTH - Control de pestañas y botones principales
-        listen('loginTab', 'click', showLogin);
-        listen('registerTab', 'click', showRegister);
         listen('loginBtn', 'click', login);
-        listen('registerBtn', 'click', register);
+        listen('adminRegisterBtn', 'click', register);
         listen('logoutBtn', 'click', () => this.logout());
 
         // 2. PANELES DE ACCESO RÁPIDO (Gerente / Admin)
